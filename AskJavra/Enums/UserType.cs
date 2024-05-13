@@ -1,4 +1,4 @@
-﻿namespace AskJavra.Emuns
+﻿namespace AskJavra.Enums
 {
     public enum UserType
     {
