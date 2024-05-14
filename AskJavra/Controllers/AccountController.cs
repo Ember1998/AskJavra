@@ -1,6 +1,5 @@
 ﻿using AskJavra.DataContext;
-using AskJavra.Emuns;
-using AskJavra.Models;
+using AskJavra.Enums;
 using AskJavra.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

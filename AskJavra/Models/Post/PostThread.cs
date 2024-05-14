@@ -11,10 +11,10 @@ namespace AskJavra.Models.Post
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
-        public string ThreadTitle { get; set; }
-        public string ThreadDescription { get; set; }
+        public required string ThreadTitle { get; set; }
+        public string? ThreadDescription { get; set; }
         public bool IsSolution { get; set; }
         public Guid PostId { get; set; }
-        public Post Post { get; set; }
+        public required Post Post { get; set; }
     }
 }

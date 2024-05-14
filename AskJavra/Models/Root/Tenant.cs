@@ -3,12 +3,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AskJavra.Models.Root
 {
-    public class Tag
+    public class Tenant
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
-        public required string Name { get; set; }
-        public string? TagDescription { get; set; }
+        public Guid Id { get; set; }
+        public required string TenantName { get; set; }
+        public string? TenantDetails { get; set; }
+        public bool IsActive { get; set; }
     }
 }

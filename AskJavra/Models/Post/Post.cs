@@ -12,8 +12,8 @@ namespace AskJavra.Models.Post
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
         public required string Title { get; set; }
-        public required string Description { get; set; }
-        public PostType PostType { get; set; }
+        public string? Description { get; set; }
+        public required PostType PostType { get; set; }
         public virtual ICollection<PostThread> Threads { get; set; }= new List<PostThread>();
         public virtual ICollection<Tag> Tags { get; set; } = new List<Tag>();
     }
