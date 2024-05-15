@@ -23,7 +23,7 @@ namespace AskJavra.Controllers
             var openai = new OpenAIAPI(getSecretKey);
             CompletionRequest completionRequest = new CompletionRequest();
             completionRequest.Prompt = query;
-            completionRequest.Model = OpenAI_API.Models.Model.Davinci;
+            completionRequest.Model = OpenAI_API.Models.Model.ChatGPTTurboInstruct;
             completionRequest.MaxTokens = 1024;
 
             var completions = await openai.Completions.CreateCompletionAsync(completionRequest);
