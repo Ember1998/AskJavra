@@ -81,7 +81,7 @@ namespace AskJavra.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("GetAll'")]
+        [HttpGet("GetAll")]
         public IActionResult GetAllUsers()
         {
             return Ok(userManager.Users.Select(x => new UserApiModel { Id = x.Id, FullName = x.FullName, UserName = x.UserName, Active = x.Active, PhoneNumber = x.PhoneNumber }));
