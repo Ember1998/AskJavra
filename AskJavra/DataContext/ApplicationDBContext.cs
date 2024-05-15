@@ -1,4 +1,5 @@
 ﻿using AskJavra.Models;
+using AskJavra.Models.Employee;
 using AskJavra.Models.Post;
 using AskJavra.Models.Root;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -16,5 +17,6 @@ namespace AskJavra.DataContext
         public DbSet<PostTag> PostTags { get; set; }
         public DbSet<PostThread> PostThreads { get; set; }
         public DbSet<Tag> Tags { get; set; }
+        public DbSet<Employee> Employees { get; set; }
     }
 }
