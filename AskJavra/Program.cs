@@ -1,6 +1,7 @@
 using AskJavra.Controllers;
 using AskJavra.DataContext;
 using AskJavra.Repositories;
+using AskJavra.Repositories.Interface;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -15,7 +16,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDBContext>();
 builder.Services.AddDbContext<ApplicationDBContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddTransient<DemoRepository>();
+//builder.Services.AddTransient<DemoRepository>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+builder.Services.AddControllers();
+builder.Services.AddScoped<TagRepository>();
+
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

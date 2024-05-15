@@ -16,5 +16,17 @@ namespace AskJavra.Models.Post
         public required PostType PostType { get; set; }
         public virtual ICollection<PostThread> Threads { get; set; }= new List<PostThread>();
         public virtual ICollection<Tag> Tags { get; set; } = new List<Tag>();
+        public Post()
+        {
+
+        }
+        public Post(string title, string? description, PostType postType, ICollection<PostThread> threads, ICollection<Tag> tags)
+        {
+            Title = title;
+            Description = description;
+            PostType = postType;
+            Threads = threads;
+            Tags = tags;
+        }
     }
 }
