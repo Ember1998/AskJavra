@@ -2,6 +2,7 @@ using AskJavra.Controllers;
 using AskJavra.DataContext;
 using AskJavra.Repositories;
 using AskJavra.Repositories.Interface;
+using AskJavra.Repositories.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,10 +22,12 @@ builder.Services.AddTransient<DemoRepository>();
 builder.Services.AddTransient<LMSSyncRepository>();
 
 //builder.Services.AddTransient<DemoRepository>();
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.AddControllers();
-builder.Services.AddScoped<TagRepository>();
+builder.Services.AddTransient<PostService>();
+builder.Services.AddTransient<PostTagService>();
+builder.Services.AddTransient<PostThreadService>();
 
 
 
