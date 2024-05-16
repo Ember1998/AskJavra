@@ -11,22 +11,28 @@ namespace AskJavra.Models.Post
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
-        public required string Title { get; set; }
+        public  string Title { get; set; }
         public string? Description { get; set; }
-        public required PostType PostType { get; set; }
+        public  PostType PostType { get; set; }
         public virtual ICollection<PostThread> Threads { get; set; }= new List<PostThread>();
-        public virtual ICollection<Tag> Tags { get; set; } = new List<Tag>();
+        public virtual ICollection<PostTag> Tags { get; set; } = new List<PostTag>();
         public Post()
         {
 
         }
-        public Post(string title, string? description, PostType postType, ICollection<PostThread> threads, ICollection<Tag> tags)
+        public Post(string title, string? description, PostType postType, ICollection<PostThread> threads, ICollection<PostTag> tags)
         {
             Title = title;
             Description = description;
             PostType = postType;
             Threads = threads;
             Tags = tags;
+        }
+        public Post(string title, string? description, PostType postType)
+        {
+            Title = title;
+            Description = description;
+            PostType = postType;
         }
     }
 }
