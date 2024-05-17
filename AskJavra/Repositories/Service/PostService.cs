@@ -9,13 +9,13 @@ namespace AskJavra.Repositories.Service
     {
         private readonly ApplicationDBContext _context;
         private readonly DbSet<Post> _dbSet;
-        private readonly PostThreadService _postThreadService;
+        //private readonly PostThreadService _postThreadService;
 
-        public PostService(ApplicationDBContext context, PostThreadService postThreadService)
+        public PostService(ApplicationDBContext context /*,PostThreadService postThreadService*/)
         {
             _context = context;
             _dbSet = _context.Set<Post>();
-            _postThreadService = postThreadService;
+            //_postThreadService = postThreadService;
         }
 
         public IEnumerable<Post> GetAllAsync()

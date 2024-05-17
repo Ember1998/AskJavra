@@ -15,6 +15,8 @@ namespace AskJavra.Models.Employee
         public required string Country { get; set; }
         public required EmpStatus Status { get; set; }
         public required string Username { get; set; }
+        public required string Email { get; set; }
+        public required int LMSEmployeeId { get; set; }
 
     }
 }
