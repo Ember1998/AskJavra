@@ -22,7 +22,7 @@ namespace AskJavra.Controllers
             this.roleManager = roleManager;
         }
         [AllowAnonymous]
-        [HttpGet("login")]
+        [HttpPost("login")]
         public async Task<dynamic> LogIn(LoginModel model)
         {
             try
