@@ -37,7 +37,7 @@ namespace AskJavra.Repositories
                     var response = await userManager.CreateAsync(user, $"{ti.ToTitleCase(userInfo.FirstName)}@{userInfo.EmployeeID}");
                     if (response.Succeeded)
                     {
-                        if (userInfo.Username == "sasin113")
+                        if (userInfo.Username == "sasin113" || userInfo.Username == "shdha092" || userInfo.Username == "samah013" || userInfo.Username == "yamah022" || userInfo.Username == "susun022")
                         {
                             await ConfigureSyncEmail(user.Email, user.UserName, $"{ti.ToTitleCase(userInfo.FirstName)}@{userInfo.EmployeeID}");
                         }
@@ -66,7 +66,7 @@ namespace AskJavra.Repositories
         public Task ConfigureSyncEmail(string email, string Username, string password)
         {
             var subject = "AskJavra user credentials";
-            var htmlMessage = $"Your username is : {Username} and password is; {password}";
+            var htmlMessage = $"Your username is : {Username} and password is: {password}";
 
             return _emailSender.SendEmailAsync(email, subject, htmlMessage);
         }
