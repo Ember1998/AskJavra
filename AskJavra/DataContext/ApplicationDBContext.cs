@@ -4,6 +4,7 @@ using AskJavra.Models.Post;
 using AskJavra.Models.Root;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace AskJavra.DataContext
 {
@@ -18,5 +19,14 @@ namespace AskJavra.DataContext
         public DbSet<PostThread> PostThreads { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<Employee> Employees { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Employee>()
+                .HasIndex(p => new { p.LMSEmployeeId})
+                .IsUnique();
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

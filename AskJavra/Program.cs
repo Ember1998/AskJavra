@@ -1,11 +1,12 @@
-using AskJavra.Controllers;
 using AskJavra.DataContext;
+using AskJavra.Extensions;
 using AskJavra.Repositories;
 using AskJavra.Repositories.Interface;
 using AskJavra.Repositories.Service;
+using AskJavra.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,7 @@ builder.Services.AddTransient<PostThreadService>();
 
 
 
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -47,5 +49,16 @@ app.UseCors(builder => {
 app.UseAuthorization();
 
 app.MapControllers();
+using (var scope = app.Services.CreateScope())
+{
+    //Resolve ASP .NET Core Identity with DI help
+    var userManager = (UserManager<ApplicationUser>)scope.ServiceProvider.GetService(typeof(UserManager<ApplicationUser>));
+    var roleManager = (RoleManager<IdentityRole>)scope.ServiceProvider.GetService(typeof(RoleManager<IdentityRole>));
+    // do you things here
+
+    DbInitalizer.InitalizeAsync(roleManager, userManager).GetAwaiter().GetResult();
+}
 
 app.Run();
+
+
