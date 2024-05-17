@@ -10,5 +10,6 @@ namespace AskJavra.DataContext
         }
         public bool Active { get; set; }
         public string FullName { get; set; }
+        public string Department { get; set; }
     }
 }

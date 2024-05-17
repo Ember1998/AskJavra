@@ -1,9 +1,10 @@
-﻿namespace AskJavra.Emuns
+﻿namespace AskJavra.Enums
 {
     public enum UserType
     {
         User,
-        Admin
+        Admin,
+        Employee
     }
 
     public static class UserTypeExtensions
@@ -14,6 +15,8 @@
             {
                 case "admin":
                     return UserType.Admin;
+                case "employee":
+                    return UserType.Employee;
                 default:
                     return UserType.User;
 

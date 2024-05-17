@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OpenAI_API.Completions;
 using OpenAI_API;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AskJavra.Controllers
 {
@@ -16,6 +17,7 @@ namespace AskJavra.Controllers
         }
         [HttpGet]
         [Route("ChatGPT")]
+        [AllowAnonymous]
         public async Task<IActionResult> UseChatGPT(string query)
         {
             string outputResult = "";
