@@ -62,7 +62,7 @@ namespace AskJavra.Controllers
                 return BadRequest(errorResponse);
             }
             var tag = new Tag(id, entity.Name, entity.TagDescription);
-             _tagService.UpdateAsync(tag);
+            await _tagService.UpdateAsync(tag);
             var response = new ResponseDto<Tag>(true, "Entity updated successfully", tag);
             return Ok(response);
         }

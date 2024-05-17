@@ -50,13 +50,13 @@ namespace AskJavra.Repositories.Service
             }
         }
 
-        public ResponseDto<Tag> UpdateAsync(Tag entity)
+        public async Task<ResponseDto<Tag>> UpdateAsync(Tag entity)
         {
             try
             {
                 _dbSet.Attach(entity);
                 _context.Entry(entity).State = EntityState.Modified;
-                _context.SaveChanges();
+               await  _context.SaveChangesAsync();
                 return new ResponseDto<Tag>(true, "Record updated successfully", entity);
             }
             catch (Exception ex)

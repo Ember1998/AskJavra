@@ -26,7 +26,8 @@ builder.Services.AddTransient<LMSSyncRepository>();
 builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.AddControllers();
-builder.Services.AddTransient<PostService>();
+builder.Services.AddScoped<PostService>();
+builder.Services.AddScoped<TagService>();
 builder.Services.AddTransient<PostTagService>();
 builder.Services.AddTransient<PostThreadService>();
 
