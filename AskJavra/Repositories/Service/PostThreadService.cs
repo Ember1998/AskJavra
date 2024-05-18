@@ -9,87 +9,79 @@ namespace AskJavra.Repositories.Service
     {
         private readonly ApplicationDBContext _context;
         private readonly DbSet<PostThread> _dbSet;
-        private readonly PostService _postService;
+        private readonly DbSet<Post> _postDBSet;
 
-        public PostThreadService(ApplicationDBContext context, PostService postService)
+        public PostThreadService(ApplicationDBContext context, DbSet<Post> postDBSet)
         {
             _context = context;
             _dbSet = _context.Set<PostThread>();
-            _postService = postService;
+            _postDBSet = postDBSet;
         }
 
-        public IEnumerable<PostThread> GetAllAsync()
+        public async Task<IEnumerable<PostThread>> GetAllAsync()
         {
-            return _dbSet.ToList();
+            return await _dbSet.ToListAsync();
         }
 
-        public ResponseDto<PostThread> GetByIdAsync(Guid id)
-        {
-            try
-            {
-                var postThread = _dbSet.Find(id);
-                return new ResponseDto<PostThread>(true, "Success", postThread);
-            }
-            catch (Exception ex)
-            {
-                return new ResponseDto<PostThread>(true, "Error", new PostThread());
-            }
-        }
-        public List<PostThread> GetThreadByPostId(Guid postId)
+        public async  Task<ResponseDto<PostThread>> GetByIdAsync(Guid id)
         {
             try
             {
-                var result = _dbSet.Where(x=>x.PostId == postId).ToList();
-                return result;
+                var postThread = await _dbSet.FindAsync(id);
+                if (postThread == null) return new ResponseDto<PostThread>(false, "not found", postThread);
+                else
+                    return new ResponseDto<PostThread>(true, "Success", postThread);
             }
             catch (Exception ex)
             {
-                return new List<PostThread>();
+                return new ResponseDto<PostThread>(false, ex.Message, new PostThread());
             }
         }
-
-        public ResponseDto<PostThread> AddAsync(PostThreadDto entity)
+        public async Task<ResponseDto<PostThread>> AddAsync(PostThreadDto entity)
         {
             try
             {
                 Post post = new Post();
-                var postResult = _postService.GetByIdAsync(entity.PostId);
-                if (postResult.Success)
-                    post = postResult.Data;
+                var postFetched =await _postDBSet.FindAsync(entity.PostId);
+                if (post != null)
+                    post = postFetched;
+                else
+                    return new ResponseDto<PostThread>(false, "Invalid post id", new PostThread());
+
                 var postThread = new PostThread(entity.ThreadTitle, entity.ThreadDescription, entity.PostId, post);
-                _dbSet.Add(postThread);
-                _context.SaveChanges();
+                await _dbSet.AddAsync(postThread);
+                await _context.SaveChangesAsync();
 
                 return new ResponseDto<PostThread>(true, "Record added successfully", postThread);
             }
             catch (Exception ex)
             {
-                return new ResponseDto<PostThread>(true, "Error", new PostThread());
+                return new ResponseDto<PostThread>(false, ex.Message, new PostThread());
             }
         }
 
-        public ResponseDto<PostThread> UpdateAsync(PostThread entity)
+        public async Task<ResponseDto<PostThread>> UpdateAsync(PostThread entity)
         {
             try
             {
-                Post post = new Post();
-                var postResult = _postService.GetByIdAsync(entity.PostId);
-                if (postResult.Success)
-                    post = postResult.Data;
-                entity.Post = postResult.Data;
+                var post =await _postDBSet.FindAsync(entity.PostId);
+                if (post == null)
+                   return new ResponseDto<PostThread>(false, "Invalid post id", new PostThread );
+                entity.Post = post;
                 
                 _dbSet.Attach(entity);
                 _context.Entry(entity).State = EntityState.Modified;
-                _context.SaveChanges();
+
+                await _context.SaveChangesAsync();
                 return new ResponseDto<PostThread>(true, "Record updated successfully", entity);
             }
             catch (Exception ex)
             {
-                return new ResponseDto<PostThread>(true, ex.Message, new PostThread());
+                return new ResponseDto<PostThread>(false, ex.Message, new PostThread());
             }
         }
 
-        public ResponseDto<PostThreadDto> DeleteAsync(Guid id)
+        public async Task<ResponseDto<PostThreadDto>> DeleteAsync(Guid id)
         {
             try
             {
@@ -97,15 +89,18 @@ namespace AskJavra.Repositories.Service
                 if (entity != null)
                 {
                     _dbSet.Remove(entity);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
+
+                    return new ResponseDto<PostThreadDto>(true, "Record deleted successfully", new PostThreadDto(entity.ThreadTitle, entity.ThreadDescription, entity.PostId));
                 }
-                return new ResponseDto<PostThreadDto>(true, "Record deleted successfully", new PostThreadDto(entity.ThreadTitle, entity.ThreadDescription, entity.PostId));
+                else
+                    return new ResponseDto<PostThreadDto>(false, "not found", new PostThreadDto());
+                
             }
             catch (Exception ex)
             {
-                return new ResponseDto<PostThreadDto>(true, "Error", new PostThreadDto());
+                return new ResponseDto<PostThreadDto>(false, ex.Message, new PostThreadDto());
             }
-
         }
     }
 }
