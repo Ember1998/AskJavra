@@ -12,9 +12,11 @@ namespace AskJavra.Controllers
     public class PostController : Controller
     {
         private readonly PostService _postService;
-        public PostController(PostService postService)
+        private readonly PostTagService _postTagService;
+        public PostController(PostService postService, PostTagService postTagService)
         {
             _postService = postService;
+            _postTagService = postTagService;
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -45,8 +47,14 @@ namespace AskJavra.Controllers
                 {
                     return StatusCode(500,new ResponseDto<Tag>(false, "Entity creation failed", new Tag()));
                 }
+                if(result.Success && result.Data.Id != Guid.Empty)
+                {
+                    if(dto.Tags != null && dto.Tags.Count >0)                       
+                        await _postTagService.AddPostTagAsync(dto.Tags,result.Data);
 
-                return CreatedAtAction(nameof(Create), new { id = result.Data.Id }, result);
+                    return CreatedAtAction(nameof(Create), new { id = result.Data.Id }, result);
+
+                }
             }
 
             var errorResponse = new ResponseDto<Tag>(false, "Invalid entity", new Tag());
