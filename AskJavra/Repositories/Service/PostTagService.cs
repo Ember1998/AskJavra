@@ -9,19 +9,14 @@ namespace AskJavra.Repositories.Service
     {
         private readonly ApplicationDBContext _context;
         private readonly DbSet<PostTag> _dbSet;
-        private readonly PostService _postService;
-        private readonly PostThreadService _postThreadService;
 
         public PostTagService(
             PostService postService, 
-            ApplicationDBContext context,
-            PostThreadService postThreadService
+            ApplicationDBContext context
             )
         {
             _context = context;
             _dbSet = _context.Set<PostTag>();
-            _postService = postService;
-            _postThreadService = postThreadService;
         }
 
         public IEnumerable<PostTag> GetAllAsync()
@@ -111,7 +106,7 @@ namespace AskJavra.Repositories.Service
         //    }
         //}
 
-        public ResponseDto<PostTagDto> DeleteAsync(int id)
+        public async Task<ResponseDto<PostTagDto>> DeleteAsync(int id)
         {
             try
             {
@@ -119,9 +114,9 @@ namespace AskJavra.Repositories.Service
                 if (entity != null)
                 {
                     _dbSet.Remove(entity);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
                 }
-                return new ResponseDto<PostTagDto>(true, "Record deleted successfully", new PostTagDto(entity.TagId, entity.PostId, entity.PostThreadId));
+                return new ResponseDto<PostTagDto>(true, "Record deleted successfully", new PostTagDto((int)entity.TagId,(Guid) entity.PostId));
             }
             catch (Exception ex)
             {
