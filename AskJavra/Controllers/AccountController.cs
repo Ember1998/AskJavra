@@ -1,6 +1,5 @@
 ﻿using AskJavra.DataContext;
-using AskJavra.Emuns;
-using AskJavra.Models;
+using AskJavra.Enums;
 using AskJavra.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,14 +14,15 @@ namespace AskJavra.Controllers
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
-        //private readonly RoleManager<IdentityRole> roleManager;
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        private readonly RoleManager<IdentityRole> roleManager;
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
+            this.roleManager = roleManager;
         }
         [AllowAnonymous]
-        [HttpGet("login")]
+        [HttpPost("login")]
         public async Task<dynamic> LogIn(LoginModel model)
         {
             try
@@ -37,7 +37,8 @@ namespace AskJavra.Controllers
                     {
                         Id = user.Id,
                         Email = user.Email,
-                        role = role.First()
+                        role = role.First(),
+                        firstLogin = !user.EmailConfirmed
                     };
                 }
                 return false;
@@ -82,7 +83,7 @@ namespace AskJavra.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("GetAll'")]
+        [HttpGet("GetAll")]
         public IActionResult GetAllUsers()
         {
             return Ok(userManager.Users.Select(x => new UserApiModel { Id = x.Id, FullName = x.FullName, UserName = x.UserName, Active = x.Active, PhoneNumber = x.PhoneNumber }));
@@ -120,6 +121,8 @@ namespace AskJavra.Controllers
             }
             var user = await userManager.FindByIdAsync(resetViewModel.Id);
             var token = await userManager.GeneratePasswordResetTokenAsync(user);
+            var emailToken = await userManager.GeneratePasswordResetTokenAsync(user);
+            var test = await userManager.ConfirmEmailAsync(user, emailToken);
             var result = await userManager.ResetPasswordAsync(user, token, resetViewModel.Password);
             return Ok(result.Succeeded);
         }

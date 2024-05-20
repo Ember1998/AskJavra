@@ -4,6 +4,7 @@ using AskJavra.DataContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AskJavra.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240514153111_PostandTags")]
+    partial class PostandTags
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,10 +38,6 @@ namespace AskJavra.Migrations
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Department")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
@@ -115,52 +114,6 @@ namespace AskJavra.Migrations
                     b.ToTable("Demos");
                 });
 
-            modelBuilder.Entity("AskJavra.Models.Employee.Employee", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Department")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Designation")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("LMSEmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LMSEmployeeId")
-                        .IsUnique();
-
-                    b.ToTable("Employees");
-                });
-
             modelBuilder.Entity("AskJavra.Models.Post.Post", b =>
                 {
                     b.Property<Guid>("Id")
@@ -175,6 +128,7 @@ namespace AskJavra.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("LastModifiedAt")
@@ -287,10 +241,15 @@ namespace AskJavra.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("TagDescription")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PostId");
 
                     b.ToTable("Tags");
                 });
@@ -431,7 +390,7 @@ namespace AskJavra.Migrations
             modelBuilder.Entity("AskJavra.Models.Post.PostTag", b =>
                 {
                     b.HasOne("AskJavra.Models.Post.Post", "Post")
-                        .WithMany("Tags")
+                        .WithMany()
                         .HasForeignKey("PostId");
 
                     b.HasOne("AskJavra.Models.Post.PostThread", "PostThread")
@@ -458,6 +417,13 @@ namespace AskJavra.Migrations
                         .IsRequired();
 
                     b.Navigation("Post");
+                });
+
+            modelBuilder.Entity("AskJavra.Models.Root.Tag", b =>
+                {
+                    b.HasOne("AskJavra.Models.Post.Post", null)
+                        .WithMany("Tags")
+                        .HasForeignKey("PostId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
