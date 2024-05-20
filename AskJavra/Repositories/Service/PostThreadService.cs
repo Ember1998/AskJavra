@@ -11,11 +11,11 @@ namespace AskJavra.Repositories.Service
         private readonly DbSet<PostThread> _dbSet;
         private readonly DbSet<Post> _postDBSet;
 
-        public PostThreadService(ApplicationDBContext context, DbSet<Post> postDBSet)
+        public PostThreadService(ApplicationDBContext context)
         {
             _context = context;
             _dbSet = _context.Set<PostThread>();
-            _postDBSet = postDBSet;
+            _postDBSet = _context.Set<Post>();
         }
 
         public async Task<IEnumerable<PostThread>> GetAllAsync()
@@ -66,7 +66,7 @@ namespace AskJavra.Repositories.Service
             {
                 var post =await _postDBSet.FindAsync(entity.PostId);
                 if (post == null)
-                   return new ResponseDto<PostThread>(false, "Invalid post id", new PostThread );
+                   return new ResponseDto<PostThread>(false, "Invalid post id", new PostThread ());
                 entity.Post = post;
                 
                 _dbSet.Attach(entity);

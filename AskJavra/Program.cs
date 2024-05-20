@@ -28,8 +28,8 @@ builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddControllers();
 builder.Services.AddScoped<PostService>();
 builder.Services.AddScoped<TagService>();
-builder.Services.AddTransient<PostTagService>();
-builder.Services.AddTransient<PostThreadService>();
+builder.Services.AddScoped<PostTagService>();
+builder.Services.AddScoped<PostThreadService>();
 
 
 
