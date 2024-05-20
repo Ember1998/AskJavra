@@ -2,6 +2,7 @@
 using AskJavra.Models.Root;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace AskJavra.Models.Post
 {
@@ -14,7 +15,9 @@ namespace AskJavra.Models.Post
         public  string Title { get; set; }
         public string? Description { get; set; }
         public  PostType PostType { get; set; }
+        [JsonIgnore]
         public virtual ICollection<PostThread> Threads { get; set; }= new List<PostThread>();
+        [JsonIgnore]
         public virtual ICollection<PostTag> Tags { get; set; } = new List<PostTag>();
         public Post()
         {
