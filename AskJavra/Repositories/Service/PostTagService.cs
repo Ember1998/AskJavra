@@ -54,56 +54,39 @@ namespace AskJavra.Repositories.Service
         //    }
         //}
 
-        public ResponseDto<PostTag> AddPostTagAsync(PostTagDto entity)
+        public async Task<ResponseDto<List<PostTag>>> AddPostTagAsync(List<PostTagDto> entity, Post post)
         {
             try
             {
-                Post post = new Post();
-                ResponseDto<Post> postResult = new ResponseDto<Post>();
+                List<PostTag> postTags = new List<PostTag>();
+                foreach (var item in entity)
+                    postTags.Add(new PostTag(item.TagId, item.PostId, post));    
+                await _dbSet.AddRangeAsync(postTags);
+                await _context.SaveChangesAsync();
 
-                if (entity.PostId != null)
-                {
-                    postResult = _postService.GetByIdAsync((Guid)entity.PostId);
-                    if (postResult.Success)
-                        post = postResult.Data;
-                }               
-                
-                var postTag = new PostTag(entity.TagId, entity.PostId,post);
-               
-                _dbSet.Add(postTag);
-                _context.SaveChanges();
-
-                return new ResponseDto<PostTag>(true, "Record added successfully", postTag);
+                return new ResponseDto<List<PostTag>>(true, "Thread tag added successfully", postTags);
             }
             catch (Exception ex)
             {
-                return new ResponseDto<PostTag>(true, "Error", new PostTag());
+                return new ResponseDto<List<PostTag>>(false, ex.Message, new List<PostTag>()); ;
             }
         }
-        public ResponseDto<PostTag> AddPostThreadTagAsync(PostTagDto entity)
+        public async Task<ResponseDto<List<PostTag>>> AddPostThreadTagAsync(List<ThreadTagDto> entity, PostThread thred)
         {
             try
             {
-                PostThread post = new PostThread();
-                ResponseDto<PostThread> postResult = new ResponseDto<PostThread>();
+                List<PostTag> threadtags = new List<PostTag>();
+                foreach(var item in entity)
+                    threadtags.Add(new PostTag(item.TagId, item.PostThreadId, thred));
 
-                if (entity.PostThreadId != null)
-                {
-                    postResult = _postThreadService.GetByIdAsync((Guid)entity.PostThreadId);
-                    if (postResult.Success)
-                        post = postResult.Data;
-                }
+                await _dbSet.AddRangeAsync(threadtags);
+                await _context.SaveChangesAsync();
 
-                var postTag = new PostTag(entity.TagId, entity.PostThreadId, postResult.Data);
-
-                _dbSet.Add(postTag);
-                _context.SaveChanges();
-
-                return new ResponseDto<PostTag>(true, "Record added successfully", postTag);
+                return new ResponseDto<List<PostTag>>(true, "Thread tag added successfully", threadtags);
             }
             catch (Exception ex)
             {
-                return new ResponseDto<PostTag>(true, "Error", new PostTag());
+                return new ResponseDto<List<PostTag>>(true, ex.Message, new List<PostTag>());
             }
         }
 

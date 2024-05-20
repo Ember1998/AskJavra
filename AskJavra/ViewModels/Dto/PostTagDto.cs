@@ -7,16 +7,24 @@ namespace AskJavra.ViewModels.Dto
 {
     public class PostTagDto
     {
-        public int? TagId { get; set; }
-        public Guid? PostId { get; set; }
-        public Guid? PostThreadId { get; set; }
-        public PostTagDto(int? tagId, Guid? postId, Guid? postThreadId)
+        public int TagId { get; set; }
+        public Guid PostId { get; set; }
+        public PostTagDto(int tagId, Guid postId)
         {
             TagId = tagId;
             PostId = postId;
-            PostThreadId = postThreadId;
         }
         public PostTagDto() {  }
+    }
+    public class ThreadTagDto
+    {
+        public int TagId { get; set; }
+        public Guid PostThreadId { get; set; }
+        public ThreadTagDto(int tagId, Guid postThreadId)
+        {
+            TagId = tagId;
+            PostThreadId = postThreadId;
+        }
     }
     public class PostTagAndIdDto : PostThreadDto
     {
