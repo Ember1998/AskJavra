@@ -21,7 +21,8 @@ namespace AskJavra.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            return Ok(await _postService.GetAllAsync());
+            var result = await _postService.GetAllAsync();
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
@@ -52,7 +53,7 @@ namespace AskJavra.Controllers
                     if(dto.Tags != null && dto.Tags.Count >0)                       
                         await _postTagService.AddPostTagAsync(dto.Tags,result.Data);
 
-                    return CreatedAtAction(nameof(Create), new { id = result.Data.Id }, result);
+                    return Ok(result);
 
                 }
             }

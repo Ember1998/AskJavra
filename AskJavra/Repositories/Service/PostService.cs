@@ -18,7 +18,8 @@ namespace AskJavra.Repositories.Service
 
         public async Task<IEnumerable<Post>> GetAllAsync()
         {
-            return await _dbSet.ToListAsync();
+            var checek = await _dbSet.Include(t => t.Tags).Include(p => p.Threads).ToListAsync();
+            return checek;
         }
 
         public async Task<ResponseDto<Post>> GetByIdAsync(Guid id)
