@@ -16,10 +16,24 @@ namespace AskJavra.Repositories.Service
             _dbSet = _context.Set<Post>();
         }
 
-        public async Task<IEnumerable<Post>> GetAllAsync()
+        public async Task<List<PostDto>> GetAllAsync()
         {
-            var checek = await _dbSet.Include(t => t.Tags).Include(p => p.Threads).ToListAsync();
-            return checek;
+            var post = await _dbSet.Include(t => t.Tags).ThenInclude(x=>x.Tag).Include(p => p.Threads).ToListAsync();
+            return post.Select(x=> new PostDto
+            {
+                Title = x.Title,
+                Description = x.Description,
+                PostType = x.PostType,
+                Tags = x.Tags.Select(t=> new PostTagDto
+                {
+                    PostId = t.PostId,
+                    TagId = t.TagId,
+                    TagDescription = t.Tag.TagDescription,
+                    TagName = t.Tag.Name
+
+                }).ToList(),
+
+            }).ToList();
         }
 
         public async Task<ResponseDto<Post>> GetByIdAsync(Guid id)

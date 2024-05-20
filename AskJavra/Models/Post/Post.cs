@@ -15,15 +15,13 @@ namespace AskJavra.Models.Post
         public  string Title { get; set; }
         public string? Description { get; set; }
         public  PostType PostType { get; set; }
-        [JsonIgnore]
-        public virtual ICollection<PostThread> Threads { get; set; }= new List<PostThread>();
-        [JsonIgnore]
-        public virtual ICollection<PostTag> Tags { get; set; } = new List<PostTag>();
+        public List<PostThread> Threads { get; set; }= new List<PostThread>();
+        public List<PostTag> Tags { get; set; } = new List<PostTag>();
         public Post()
         {
 
         }
-        public Post(string title, string? description, PostType postType, ICollection<PostThread> threads, ICollection<PostTag> tags)
+        public Post(string title, string? description, PostType postType, List<PostThread> threads, List<PostTag> tags)
         {
             Title = title;
             Description = description;
