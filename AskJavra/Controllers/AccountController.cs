@@ -37,7 +37,8 @@ namespace AskJavra.Controllers
                     {
                         Id = user.Id,
                         Email = user.Email,
-                        role = role.First()
+                        role = role.First(),
+                        firstLogin = !user.EmailConfirmed
                     };
                 }
                 return false;
@@ -120,6 +121,8 @@ namespace AskJavra.Controllers
             }
             var user = await userManager.FindByIdAsync(resetViewModel.Id);
             var token = await userManager.GeneratePasswordResetTokenAsync(user);
+            var emailToken = await userManager.GeneratePasswordResetTokenAsync(user);
+            var test = await userManager.ConfirmEmailAsync(user, emailToken);
             var result = await userManager.ResetPasswordAsync(user, token, resetViewModel.Password);
             return Ok(result.Succeeded);
         }
