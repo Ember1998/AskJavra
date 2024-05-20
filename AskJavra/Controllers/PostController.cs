@@ -1,4 +1,6 @@
-﻿using AskJavra.Models.Root;
+﻿using AskJavra.Models.Post;
+using AskJavra.Models.Root;
+using AskJavra.Repositories.Interface;
 using AskJavra.Repositories.Service;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Mvc;
@@ -7,71 +9,69 @@ namespace AskJavra.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TagController : Controller
+    public class PostController : Controller
     {
-        private readonly TagService _tagService;
-        public TagController(TagService tagService)
+        private readonly PostService _postService;
+        public PostController(PostService postService)
         {
-            _tagService = tagService;
+            _postService = postService;
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
-        {           
-            return Ok(await _tagService.GetAllAsync());
+        {
+            return Ok(await _postService.GetAllAsync());
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(Guid id)
         {
-            //var errorResponse = new ResponseDto<MyEntity>(false, "Entity not found", null);
-            //return NotFound(errorResponse);
-            var result =await _tagService.GetByIdAsync(id);
+            var result = await _postService.GetByIdAsync(id);
             if (result != null && result.Success)
                 return Ok(result);
             else if (result.Success == false && result.Message == "not found")
                 return NotFound(result);
-            else return StatusCode( 500,result);
+            else return BadRequest();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] TagDto dto)
+        public async Task<IActionResult> Create([FromBody] PostDto dto)
         {
             if (ModelState.IsValid)
             {
-                var result =  await _tagService.AddAsync(dto);
+                var result = await _postService.AddAsync(dto);
 
                 // Ensure result.Data is not null before accessing Id
                 if (result.Data == null)
                 {
-                    return StatusCode(500, result); ;
+                    return StatusCode(500,new ResponseDto<Tag>(false, "Entity creation failed", new Tag()));
                 }
 
                 return CreatedAtAction(nameof(Create), new { id = result.Data.Id }, result);
-            }else
-             return BadRequest(ModelState);
+            }
+
+            var errorResponse = new ResponseDto<Tag>(false, "Invalid entity", new Tag());
+            return BadRequest(errorResponse);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] TagDto entity)
+        public async Task<IActionResult> Update(Guid id, [FromBody] PostDto entity)
         {
-            if (id < 1 || !ModelState.IsValid)
+            if (id == Guid.Empty || !ModelState.IsValid)
             {
-                var errorResponse = new ResponseDto<Tag>(false, "Invalid entity", null);
-                return BadRequest(errorResponse);
+                return BadRequest(ModelState);
             }
-            var tag = new Tag(id, entity.Name, entity.TagDescription);
-            
-            var response = await _tagService.UpdateAsync(tag);
-            
+            var post = new Post(id, entity.Title, entity.Description, entity.PostType);
+            var response = await _postService.UpdateAsync(post);
             if (response.Success == false && response.Message == "not found") return NotFound(response);
             else if (response.Data != null && response.Success) return Ok(response);
             else return StatusCode(500, response);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-             var result = await _tagService.DeleteAsync(id);
+           
+            var result = await _postService.DeleteAsync(id);
             if (result != null && result.Success)
                 return Ok(result);
             else if (result.Message == "not found")

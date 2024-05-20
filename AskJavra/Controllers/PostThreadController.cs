@@ -1,44 +1,44 @@
-﻿using AskJavra.Models.Root;
+﻿using AskJavra.Models.Post;
+using AskJavra.Models.Root;
+using AskJavra.Repositories.Interface;
 using AskJavra.Repositories.Service;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AskJavra.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class TagController : Controller
+    public class PostThreadController : Controller
     {
-        private readonly TagService _tagService;
-        public TagController(TagService tagService)
+        private readonly PostThreadService _postThreadService;
+        public PostThreadController(PostThreadService postThreadService)
         {
-            _tagService = tagService;
+            _postThreadService = postThreadService;
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
-        {           
-            return Ok(await _tagService.GetAllAsync());
+        {
+            return Ok(await _postThreadService.GetAllAsync());
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(Guid id)
         {
             //var errorResponse = new ResponseDto<MyEntity>(false, "Entity not found", null);
             //return NotFound(errorResponse);
-            var result =await _tagService.GetByIdAsync(id);
+            var result = await _postThreadService.GetByIdAsync(id);
             if (result != null && result.Success)
                 return Ok(result);
             else if (result.Success == false && result.Message == "not found")
                 return NotFound(result);
-            else return StatusCode( 500,result);
+            else return StatusCode(500, result);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] TagDto dto)
+        public async Task<IActionResult> Create([FromBody] PostThreadDto dto)
         {
             if (ModelState.IsValid)
             {
-                var result =  await _tagService.AddAsync(dto);
+                var result = await _postThreadService.AddAsync(dto);
 
                 // Ensure result.Data is not null before accessing Id
                 if (result.Data == null)
@@ -47,31 +47,31 @@ namespace AskJavra.Controllers
                 }
 
                 return CreatedAtAction(nameof(Create), new { id = result.Data.Id }, result);
-            }else
-             return BadRequest(ModelState);
+            }
+            else
+                return BadRequest(ModelState);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] TagDto entity)
+        public async Task<IActionResult> Update(Guid id, [FromBody] PostThreadDto entity)
         {
-            if (id < 1 || !ModelState.IsValid)
+            if (id != Guid.Empty || !ModelState.IsValid)
             {
                 var errorResponse = new ResponseDto<Tag>(false, "Invalid entity", null);
                 return BadRequest(errorResponse);
             }
-            var tag = new Tag(id, entity.Name, entity.TagDescription);
-            
-            var response = await _tagService.UpdateAsync(tag);
-            
+            var postThread = new PostThread(id, entity.ThreadTitle, entity.ThreadDescription, entity.PostId);
+            var response = await _postThreadService.UpdateAsync(postThread);
+           
             if (response.Success == false && response.Message == "not found") return NotFound(response);
             else if (response.Data != null && response.Success) return Ok(response);
             else return StatusCode(500, response);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-             var result = await _tagService.DeleteAsync(id);
+            var result = await _postThreadService.DeleteAsync(id);
             if (result != null && result.Success)
                 return Ok(result);
             else if (result.Message == "not found")

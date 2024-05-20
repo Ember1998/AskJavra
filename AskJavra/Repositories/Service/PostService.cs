@@ -9,49 +9,48 @@ namespace AskJavra.Repositories.Service
     {
         private readonly ApplicationDBContext _context;
         private readonly DbSet<Post> _dbSet;
-        //private readonly PostThreadService _postThreadService;
 
-        public PostService(ApplicationDBContext context /*,PostThreadService postThreadService*/)
+        public PostService(ApplicationDBContext context)
         {
             _context = context;
             _dbSet = _context.Set<Post>();
-            //_postThreadService = postThreadService;
         }
 
-        public IEnumerable<Post> GetAllAsync()
+        public async Task<IEnumerable<Post>> GetAllAsync()
         {
-            return _dbSet.ToList();
+            return await _dbSet.ToListAsync();
         }
 
-        public ResponseDto<Post> GetByIdAsync(Guid id)
+        public async Task<ResponseDto<Post>> GetByIdAsync(Guid id)
         {
             try
             {
-                var tag = _dbSet.Find(id);
-                if (tag != null)
-                    return new ResponseDto<Post>(true, "Success", tag);
+                var post = await _dbSet.FindAsync(id);
+                if (post != null)
+                    return new ResponseDto<Post>(true, "Success", post);
                 else
-                    return new ResponseDto<Post>(false, "Error", new Post());
+                    return new ResponseDto<Post>(false, "not found", new Post());
             }
             catch (Exception ex)
             {
-                return new ResponseDto<Post>(false, "Error", new Post());
+                return new ResponseDto<Post>(false, ex.Message, new Post());
             }
         }
 
-        public ResponseDto<Post> AddAsync(PostDto entity)
+        public async  Task<ResponseDto<Post>> AddAsync(PostDto entity)
         {
             try
             {
                 var post = new Post(entity.Title, entity.Description, entity.PostType, new List<PostThread>(), new List<PostTag>());
-                _dbSet.Add(post);
-                _context.SaveChanges();
+                
+                await _dbSet.AddAsync(post);
+                await _context.SaveChangesAsync();
 
                 return new ResponseDto<Post>(true, "Record added successfully", post);
             }
             catch (Exception ex)
             {
-                return new ResponseDto<Post>(false, "Error", new Post());
+                return new ResponseDto<Post>(false, ex.Message, new Post());
             }
         }
 
@@ -59,9 +58,13 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
+                if(await _dbSet.FindAsync(entity.Id) == null)
+                    return new ResponseDto<Post>(false, "not found", entity);
+
                 _dbSet.Attach(entity);
                 _context.Entry(entity).State = EntityState.Modified;
-               await _context.SaveChangesAsync();
+               
+                await _context.SaveChangesAsync();
                 return new ResponseDto<Post>(true, "Record updated successfully", entity);
             }
             catch (Exception ex)
@@ -70,21 +73,23 @@ namespace AskJavra.Repositories.Service
             }
         }
 
-        public ResponseDto<PostDto> DeleteAsync(int id)
+        public async Task<ResponseDto<PostDto>> DeleteAsync(Guid id)
         {
             try
             {
-                var entity = _dbSet.Find(id);
+                var entity = await _dbSet.FindAsync(id);
                 if (entity != null)
                 {
                     _dbSet.Remove(entity);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
+                    return new ResponseDto<PostDto>(true, "Record deleted successfully", new PostDto());
                 }
-                return new ResponseDto<PostDto>(true, "Record deleted successfully", new PostDto(entity.Title, entity.Description, entity.PostType));
+                else
+                    return new ResponseDto<PostDto>(false, "not found", new PostDto());
             }
             catch (Exception ex)
             {
-                return new ResponseDto<PostDto>(false, "Error", new PostDto());
+                return new ResponseDto<PostDto>(false, ex.Message, new PostDto());
             }
 
         }

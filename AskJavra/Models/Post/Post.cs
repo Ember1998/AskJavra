@@ -28,8 +28,9 @@ namespace AskJavra.Models.Post
             Threads = threads;
             Tags = tags;
         }
-        public Post(string title, string? description, PostType postType)
+        public Post(Guid id,string title, string? description, PostType postType)
         {
+            Id = id;
             Title = title;
             Description = description;
             PostType = postType;
