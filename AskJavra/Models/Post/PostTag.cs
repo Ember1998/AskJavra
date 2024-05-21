@@ -23,9 +23,23 @@ namespace AskJavra.Models.Post
             PostId = postId;
             Post = post;
         }
+        public PostTag(int id, int? tagId, Guid? postId, Post? post)
+        {
+            Id = id;
+            TagId = tagId;
+            PostId = postId;
+            Post = post;
+        }
         public PostTag(int? tagId, Guid? postThreadId, PostThread? postThread)
         {
             Id = this.Id;
+            TagId = tagId;
+            PostThreadId = postThreadId;
+            PostThread = postThread;
+        }
+        public PostTag(int id, int? tagId, Guid? postThreadId, PostThread? postThread)
+        {
+            Id = id;
             TagId = tagId;
             PostThreadId = postThreadId;
             PostThread = postThread;

@@ -24,6 +24,7 @@ namespace AskJavra.Repositories.Service
                 Title = x.Title,
                 Description = x.Description,
                 PostType = x.PostType,
+                PostId = x.Id,
                 Tags = x.Tags.Select(t=> new PostTagDto
                 {
                     PostId = t.PostId,

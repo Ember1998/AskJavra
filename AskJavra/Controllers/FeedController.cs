@@ -9,11 +9,11 @@ namespace AskJavra.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PostController : Controller
+    public class FeedController : Controller
     {
         private readonly PostService _postService;
         private readonly PostTagService _postTagService;
-        public PostController(PostService postService, PostTagService postTagService)
+        public FeedController(PostService postService, PostTagService postTagService)
         {
             _postService = postService;
             _postTagService = postTagService;
