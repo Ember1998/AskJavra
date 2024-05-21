@@ -10,6 +10,8 @@ namespace AskJavra.ViewModels.Dto
         [Required]
         public Guid PostId { get; set; }
         public string? ThreadDescription { get; set; }
+        public List<ThreadTagDto> Tags { get; set; }
+        public PostDto Post { get; set; }
         public PostThreadDto(string threadTitle, string? threadDescription, Guid postId)
         {
            ThreadTitle = threadTitle;

@@ -5,9 +5,10 @@ namespace AskJavra.ViewModels.Dto
     public class PostDto
     {
         public string Title { get; set; }
+        public Guid PostId { get; set; }
         public string? Description { get; set; }
         public PostType PostType { get; set; }
-        public List<PostTagDto> Tags { get; set; }
+        public List<PostTagDto>? Tags { get; set; }
 
         public PostDto(string title, string? description, PostType postType, List<PostTagDto> tags)
         {

@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AskJavra.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class PostThreadController : Controller
     {
         private readonly PostThreadService _postThreadService;
