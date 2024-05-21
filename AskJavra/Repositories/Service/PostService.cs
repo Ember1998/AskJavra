@@ -25,12 +25,16 @@ namespace AskJavra.Repositories.Service
                 Description = x.Description,
                 PostType = x.PostType,
                 PostId = x.Id,
+                CreatedBy = x.CreatedBy,
+                CreationAt = x.CreatedAt,
                 Tags = x.Tags.Select(t=> new PostTagDto
                 {
                     PostId = t.PostId,
                     TagId = t.TagId,
                     TagDescription = t.Tag.TagDescription,
-                    TagName = t.Tag.Name
+                    TagName = t.Tag.Name,
+                    CreationAt = t.CreatedAt,
+                    CreatedBy = t.CreatedBy
 
                 }).ToList(),
 

@@ -11,6 +11,8 @@ namespace AskJavra.ViewModels.Dto
         public Guid? PostId { get; set; }
         public string TagName { get; set; }
         public string TagDescription { get; set; } = string.Empty;
+        public DateTime CreationAt { get; set; }
+        public string CreatedBy { get; set; } = string.Empty;
         public PostTagDto(int tagId, Guid postId)
         {
             TagId = tagId;
