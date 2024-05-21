@@ -19,17 +19,20 @@ namespace AskJavra.Repositories.Service
             _dbSet = _context.Set<PostTag>();
         }
 
-        public IEnumerable<PostTag> GetAllAsync()
+        public async Task<IEnumerable<PostTag>> GetAllAsync()
         {
-            return _dbSet.ToList();
+            return await _dbSet.ToListAsync();
         }
 
-        public ResponseDto<PostTag> GetByIdAsync(int id)
+        public async Task<ResponseDto<PostTag>> GetByIdAsync(int id)
         {
             try
             {
-                var postTag = _dbSet.Find(id);
-                return new ResponseDto<PostTag>(true, "Success", postTag);
+                var postTag = await _dbSet.FindAsync(id);
+                if (postTag != null)
+                    return new ResponseDto<PostTag>(true, "Success", postTag);
+                else
+                    return new ResponseDto<PostTag>(false, "not found", new PostTag());
             }
             catch (Exception ex)
             {
@@ -85,32 +88,46 @@ namespace AskJavra.Repositories.Service
             }
         }
 
-        //public ResponseDto<PostThread> UpdateAsync(PostTag entity)
-        //{
-        //    try
-        //    {
-        //        Post post = new Post();
-        //        var postResult = _postService.GetByIdAsync(entity.PostId);
-        //        if (postResult.Success)
-        //            post = postResult.Data;
-        //        entity.Post = postResult.Data;
-                
-        //        _dbSet.Attach(entity);
-        //        _context.Entry(entity).State = EntityState.Modified;
-        //        _context.SaveChanges();
-        //        return new ResponseDto<PostThread>(true, "Record updated successfully", entity);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return new ResponseDto<PostThread>(true, ex.Message, new PostThread());
-        //    }
-        //}
-
-        public async Task<ResponseDto<PostTagDto>> DeleteAsync(int id)
+        public async Task<ResponseDto<PostTag>> UpdatePostTagAsync(int postTagId, PostTagDto entity, Post post)
         {
             try
             {
-                var entity = _dbSet.Find(id);
+                PostTag postTag = new PostTag(postTagId, entity.TagId, entity.PostId, post);
+               
+
+                _dbSet.Attach(postTag);
+                _context.Entry(postTag).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+                return new ResponseDto<PostTag>(true, "Record updated successfully", postTag);
+            }
+            catch (Exception ex)
+            {
+                return new ResponseDto<PostTag>(true, ex.Message, new PostTag());
+            }
+        }
+        public async  Task<ResponseDto<PostTag>> UpdatePostThreadAsync(int postTagId, ThreadTagDto entity, Post post)
+        {
+            try
+            {
+                PostTag postTag = new PostTag(postTagId, entity.TagId, entity.PostThreadId, post);
+
+
+                _dbSet.Attach(postTag);
+                _context.Entry(postTag).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+                return new ResponseDto<PostTag>(true, "Record updated successfully", postTag);
+            }
+            catch (Exception ex)
+            {
+                return new ResponseDto<PostTag>(true, ex.Message, new PostTag());
+            }
+        }
+
+        public async Task<ResponseDto<PostTagDto>> DeleteAsync(int postTagId)
+        {
+            try
+            {
+                var entity = await _dbSet.FindAsync(postTagId);
                 if (entity != null)
                 {
                     _dbSet.Remove(entity);
