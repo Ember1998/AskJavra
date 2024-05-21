@@ -20,7 +20,8 @@ namespace AskJavra.Repositories.Service
 
         public async Task<IEnumerable<Tag>> GetAllAsync()
         {
-            return await _dbSet.ToListAsync();
+            var result = await _dbSet.ToListAsync();
+            return result;
         }
 
         public async Task<ResponseDto<Tag>> GetByIdAsync(int id)

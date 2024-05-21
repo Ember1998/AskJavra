@@ -16,7 +16,6 @@ namespace AskJavra.Models.Post
         public bool IsSolution { get; set; } = false;
         public Guid PostId { get; set; }
         public Post Post { get; set; }
-        public ICollection<PostTag> Tags { get; set; }
         public PostThread() {
             ThreadTitle = string.Empty;
             Post = new Post();
@@ -28,6 +27,7 @@ namespace AskJavra.Models.Post
             ThreadDescription = threadDescription;
             PostId = postId;
             Post = post;
+            IsSolution = false;
         }
         public PostThread(Guid id, string threadTitle, string? threadDescription, Guid postId)
         {

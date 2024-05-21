@@ -69,24 +69,24 @@ namespace AskJavra.Repositories.Service
                 return new ResponseDto<List<PostTag>>(false, ex.Message, new List<PostTag>()); ;
             }
         }
-        public async Task<ResponseDto<List<PostTag>>> AddPostThreadTagAsync(List<ThreadTagDto> entity, PostThread thred)
-        {
-            try
-            {
-                List<PostTag> threadtags = new List<PostTag>();
-                foreach(var item in entity)
-                    threadtags.Add(new PostTag(item.TagId, item.PostThreadId, thred));
+        //public async Task<ResponseDto<List<PostTag>>> AddPostThreadTagAsync(List<ThreadTagDto> entity, PostThread thred)
+        //{
+        //    try
+        //    {
+        //        List<PostTag> threadtags = new List<PostTag>();
+        //        foreach(var item in entity)
+        //            threadtags.Add(new PostTag(item.TagId, item.PostThreadId, thred));
 
-                await _dbSet.AddRangeAsync(threadtags);
-                await _context.SaveChangesAsync();
+        //        await _dbSet.AddRangeAsync(threadtags);
+        //        await _context.SaveChangesAsync();
 
-                return new ResponseDto<List<PostTag>>(true, "Thread tag added successfully", threadtags);
-            }
-            catch (Exception ex)
-            {
-                return new ResponseDto<List<PostTag>>(true, ex.Message, new List<PostTag>());
-            }
-        }
+        //        return new ResponseDto<List<PostTag>>(true, "Thread tag added successfully", threadtags);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return new ResponseDto<List<PostTag>>(true, ex.Message, new List<PostTag>());
+        //    }
+        //}
 
         public async Task<ResponseDto<PostTag>> UpdatePostTagAsync(int postTagId, PostTagDto entity, Post post)
         {
@@ -105,23 +105,23 @@ namespace AskJavra.Repositories.Service
                 return new ResponseDto<PostTag>(true, ex.Message, new PostTag());
             }
         }
-        public async  Task<ResponseDto<PostTag>> UpdatePostThreadAsync(int postTagId, ThreadTagDto entity, Post post)
-        {
-            try
-            {
-                PostTag postTag = new PostTag(postTagId, entity.TagId, entity.PostThreadId, post);
+        //public async  Task<ResponseDto<PostTag>> UpdatePostThreadAsync(int postTagId, ThreadTagDto entity, Post post)
+        //{
+        //    try
+        //    {
+        //        PostTag postTag = new PostTag(postTagId, entity.TagId, entity.PostThreadId, post);
 
 
-                _dbSet.Attach(postTag);
-                _context.Entry(postTag).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                return new ResponseDto<PostTag>(true, "Record updated successfully", postTag);
-            }
-            catch (Exception ex)
-            {
-                return new ResponseDto<PostTag>(true, ex.Message, new PostTag());
-            }
-        }
+        //        _dbSet.Attach(postTag);
+        //        _context.Entry(postTag).State = EntityState.Modified;
+        //        await _context.SaveChangesAsync();
+        //        return new ResponseDto<PostTag>(true, "Record updated successfully", postTag);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return new ResponseDto<PostTag>(true, ex.Message, new PostTag());
+        //    }
+        //}
 
         public async Task<ResponseDto<PostTagDto>> DeleteAsync(int postTagId)
         {

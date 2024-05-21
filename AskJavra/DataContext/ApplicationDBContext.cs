@@ -19,6 +19,8 @@ namespace AskJavra.DataContext
         public DbSet<PostThread> PostThreads { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<Employee> Employees { get; set; }
+        public DbSet<PostUpVote> PostUpVotes { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

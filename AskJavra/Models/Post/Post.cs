@@ -15,19 +15,22 @@ namespace AskJavra.Models.Post
         public  string Title { get; set; }
         public string? Description { get; set; }
         public  PostType PostType { get; set; }
-        public List<PostThread> Threads { get; set; }= new List<PostThread>();
-        public List<PostTag> Tags { get; set; } = new List<PostTag>();
+        public FeedStatus FeedStatus { get; set; }
+        public virtual List<PostThread> Threads { get; set; }= new List<PostThread>();
+        public virtual List<PostTag> Tags { get; set; } = new List<PostTag>();
+        public virtual List<PostUpVote> UpVotes { get; set; } = new List<PostUpVote>();
         public Post()
         {
 
         }
-        public Post(string title, string? description, PostType postType, List<PostThread> threads, List<PostTag> tags)
+        public Post(string title, string? description, PostType postType,FeedStatus feedStatus, List<PostThread> threads, List<PostTag> tags)
         {
             Title = title;
             Description = description;
             PostType = postType;
             Threads = threads;
             Tags = tags;
+            FeedStatus = feedStatus;
         }
         public Post(Guid id,string title, string? description, PostType postType)
         {
