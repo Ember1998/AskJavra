@@ -36,7 +36,7 @@ namespace AskJavra.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] PostThreadDto dto)
+        public async Task<IActionResult> Create([FromBody] PostThreadViewDto dto)
         {
             if (ModelState.IsValid)
             {

@@ -97,19 +97,55 @@ namespace AskJavra.Repositories.Service
 
             return value.ToString();
         }
-        public async Task<ResponseDto<Post>> GetByIdAsync(Guid id)
+        public async Task<ResponseDto<PostViewDto>> GetByIdAsync(Guid id)
         {
             try
             {
                 var post = await _dbSet.FindAsync(id);
+
                 if (post != null)
-                    return new ResponseDto<Post>(true, "Success", post);
+                {
+                    var result = new PostViewDto
+                    {
+                        Title = post.Title,
+                        Description = post.Description,
+                        PostType = post.PostType,
+                        PostId = post.Id,
+                        CreatedBy = post.CreatedBy,
+                        CreationAt = post.CreatedAt,
+                        FeedStatus = post.FeedStatus,
+                        PostTypeName = GetEnumDescription(post.PostType),
+                        FeedStatusName = GetEnumDescription(post.FeedStatus),
+                        IsAnonymous = post.IsAnonymous,
+                        Tags = post.Tags.Select(t => new PostTagDto
+                        {
+                            PostId = t.PostId,
+                            TagId = t.TagId,
+                            TagDescription = t.Tag.TagDescription,
+                            TagName = t.Tag.Name,
+                            CreationAt = t.CreatedAt,
+                            CreatedBy = t.CreatedBy
+
+                        }).ToList(),
+                        postThreads = post.Threads.Select(t => new PostThreadViewDto
+                        {
+                            PostId = t.PostId,
+                            ThreadDescription = t.ThreadDescription,
+                            ThreadId = t.Id,
+                            ThreadTitle = t.ThreadTitle
+                        }).ToList()
+
+                    };
+
+                    return new ResponseDto<PostViewDto>(true, "Success", result);
+
+                }
                 else
-                    return new ResponseDto<Post>(false, "not found", new Post());
+                    return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
             }
             catch (Exception ex)
             {
-                return new ResponseDto<Post>(false, ex.Message, new Post());
+                return new ResponseDto<PostViewDto>(false, ex.Message, new PostViewDto());
             }
         }
 
