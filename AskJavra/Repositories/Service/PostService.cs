@@ -2,11 +2,7 @@
 using AskJavra.Models.Post;
 using AskJavra.ViewModels.Dto;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Extensions;
-using OpenAI_API.Images;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
 
 namespace AskJavra.Repositories.Service

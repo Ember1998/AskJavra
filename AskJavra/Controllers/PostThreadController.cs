@@ -1,6 +1,5 @@
 ﻿using AskJavra.Models.Post;
 using AskJavra.Models.Root;
-using AskJavra.Repositories.Interface;
 using AskJavra.Repositories.Service;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Mvc;
@@ -48,7 +47,7 @@ namespace AskJavra.Controllers
                     return StatusCode(500, result); ;
                 }
 
-                return CreatedAtAction(nameof(Create), new { id = result.Data.Id }, result);
+                return CreatedAtAction(nameof(Create), new { id = result.Data.PostId }, result);
             }
             else
                 return BadRequest(ModelState);

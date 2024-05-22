@@ -52,8 +52,9 @@ namespace AskJavra.Controllers
                 if(result.Success && result.Data.PostId != Guid.Empty)
                 {
                     var post = await _postService.GetByIdAsync(result.Data.PostId);
+                    var postMod = new Post(post.Data.PostId, post.Data.Title, post.Data.Description, post.Data.PostType, post.Data.CreatedBy, post.Data.IsAnonymous);
                     if(dto.Tags != null && dto.Tags.Count >0)                       
-                        await _postTagService.AddPostTagAsync(dto.Tags, post.Data);
+                        await _postTagService.AddPostTagAsync(dto.Tags, postMod);
 
                     return Ok(result);
 
