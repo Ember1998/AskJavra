@@ -24,7 +24,7 @@ namespace AskJavra.Models.Post
         {
 
         }
-        public Post(string title, string? description, PostType postType,FeedStatus feedStatus, List<PostThread> threads, List<PostTag> tags)
+        public Post(string title, string? description, PostType postType,FeedStatus feedStatus, List<PostThread> threads, List<PostTag> tags, string createdBy, bool isAnonymous)
         {
             Title = title;
             Description = description;
@@ -32,13 +32,17 @@ namespace AskJavra.Models.Post
             Threads = threads;
             Tags = tags;
             FeedStatus = feedStatus;
+            CreatedBy = createdBy;
+            IsAnonymous = isAnonymous;
         }
-        public Post(Guid id,string title, string? description, PostType postType)
+        public Post(Guid id,string title, string? description, PostType postType, string createdBy, bool isAnonymous)
         {
             Id = id;
             Title = title;
             Description = description;
             PostType = postType;
+            CreatedBy = createdBy;
+            IsAnonymous=isAnonymous;
         }
     }
 }

@@ -70,7 +70,7 @@ namespace AskJavra.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var post = new Post(id, entity.Title, entity.Description, entity.PostType);
+            var post = new Post(id, entity.Title, entity.Description, entity.PostType, entity.CreatedBy, entity.IsAnonymous);
             var response = await _postService.UpdateAsync(post);
             if (response.Success == false && response.Message == "not found") return NotFound(response);
             else if (response.Data != null && response.Success) return Ok(response);

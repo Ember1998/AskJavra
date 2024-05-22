@@ -116,7 +116,7 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
-                var post = new Post(entity.Title, entity.Description, entity.PostType, entity.FeedStatus, new List<PostThread>(), new List<PostTag>());
+                var post = new Post(entity.Title, entity.Description, entity.PostType, entity.FeedStatus, new List<PostThread>(), new List<PostTag>(), entity.CreatedBy, entity.IsAnonymous);
                 
                 await _dbSet.AddAsync(post);
                 await _context.SaveChangesAsync();

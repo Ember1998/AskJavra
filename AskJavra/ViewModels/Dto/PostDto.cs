@@ -10,6 +10,8 @@ namespace AskJavra.ViewModels.Dto
         public string? Description { get; set; }
         public PostType PostType { get; set; }
         public FeedStatus FeedStatus { get; set; }       
+        public string CreatedBy { get; set; }
+        public bool IsAnonymous { get; set; }
         public List<PostTagDto>? Tags { get; set; }
         
         public PostDto(string title, string? description, PostType postType, List<PostTagDto> tags)
