@@ -89,7 +89,7 @@ namespace AskJavra.Repositories.Service
 
                         }).ToList(),
                     }
-                });
+                };
                 return new ResponseDto<PostThreadDto>(true, "Record added successfully", result);
             }
             catch (Exception ex)

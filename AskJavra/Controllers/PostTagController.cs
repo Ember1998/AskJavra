@@ -1,4 +1,5 @@
-﻿using AskJavra.Models.Root;
+﻿using AskJavra.Models.Post;
+using AskJavra.Models.Root;
 using AskJavra.Repositories.Interface;
 using AskJavra.Repositories.Service;
 using AskJavra.ViewModels.Dto;
@@ -48,7 +49,8 @@ namespace AskJavra.Controllers
             if (ModelState.IsValid)
             {
                 var post = await _postService.GetByIdAsync(postId);
-                var result = await _postTagService.AddPostTagAsync(dto, post.Data);
+                var postMod = new Post(post.Data.PostId, post.Data.Title, post.Data.Description, post.Data.PostType, post.Data.CreatedBy, post.Data.IsAnonymous);
+                var result = await _postTagService.AddPostTagAsync(dto, postMod);
 
                 // Ensure result.Data is not null before accessing Id
                 if (result.Data == null)
@@ -90,7 +92,8 @@ namespace AskJavra.Controllers
                 return BadRequest(errorResponse);
             }
             var post = await _postService.GetByIdAsync((Guid)entity.PostId);
-            var response = await _postTagService.UpdatePostTagAsync(postTagId, entity, post.Data);
+            var postMod = new Post(post.Data.PostId, post.Data.Title, post.Data.Description, post.Data.PostType, post.Data.CreatedBy, post.Data.IsAnonymous);
+            var response = await _postTagService.UpdatePostTagAsync(postTagId, entity, postMod);
 
             if (response.Success == false && response.Message == "not found") return NotFound(response);
             else if (response.Data != null && response.Success) return Ok(response);
