@@ -55,26 +55,46 @@ namespace AskJavra.Repositories.Service
                 return new ResponseDto<PostThread>(false, ex.Message, new PostThread());
             }
         }
-        public async Task<ResponseDto<PostThread>> AddAsync(PostThreadDto entity)
+        public async Task<ResponseDto<PostThreadDto>> AddAsync(PostThreadViewDto entity)
         {
             try
             {
                 Post post = new Post();
                 var postFetched =await _postDBSet.FindAsync(entity.PostId);
+
                 if (post != null)
                     post = postFetched;
                 else
-                    return new ResponseDto<PostThread>(false, "Invalid post id", new PostThread());
+                    return new ResponseDto<PostThreadDto>(false, "Invalid post id", new PostThreadDto());
 
                 var postThread = new PostThread(entity.ThreadTitle, entity.ThreadDescription, entity.PostId, post);
                 await _dbSet.AddAsync(postThread);
                 await _context.SaveChangesAsync();
+                var result = new PostThreadDto
+                {
+                    PostId = postThread.PostId,
+                    ThreadTitle = postThread.ThreadTitle,
+                    ThreadDescription = postThread.ThreadDescription,
+                    Post = new PostDto
+                    {
+                        Description = postThread.Post.Description,
+                        PostType = (Enums.PostType)postThread.Post.PostType,
+                        Title = postThread.Post.Title,
+                        Tags = postThread.Post.Tags.Select(t => new PostTagDto
+                        {
+                            PostId = t.PostId,
+                            TagId = t.TagId,
+                            TagDescription = t.Tag.TagDescription,
+                            TagName = t.Tag.Name
 
-                return new ResponseDto<PostThread>(true, "Record added successfully", postThread);
+                        }).ToList(),
+                    }
+                });
+                return new ResponseDto<PostThreadDto>(true, "Record added successfully", result);
             }
             catch (Exception ex)
             {
-                return new ResponseDto<PostThread>(false, ex.Message, new PostThread());
+                return new ResponseDto<PostThreadDto>(false, ex.Message, new PostThreadDto());
             }
         }
 
