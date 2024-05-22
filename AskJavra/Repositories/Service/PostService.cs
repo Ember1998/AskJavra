@@ -3,6 +3,7 @@ using AskJavra.Models.Post;
 using AskJavra.ViewModels.Dto;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Extensions;
+using OpenAI_API.Images;
 using System.ComponentModel;
 using System.Reflection;
 
@@ -19,12 +20,23 @@ namespace AskJavra.Repositories.Service
             _dbSet = _context.Set<Post>();
         }
 
-        public async Task<List<PostViewDto>> GetAllAsync()
+        public async Task<ResponseFeedDto> GetAllAsync(FeedRequestDto request)
         {
+            var responseResult = new ResponseFeedDto();
             var post =  _dbSet.Include(t => t.Tags).ThenInclude(x=>x.Tag).Include(p => p.Threads).Include(X=>X.UpVotes).AsQueryable();
-            //var potType = post[0].PostType.GetDisplayName();
+            if (post == null)
+                return responseResult;
 
-            //var potTypStringe = GetEnumDescription(post[0].PostType);
+            if (request.SearchTerm != null && request.SearchTerm.Length > 0)
+                post = post.Where(x => x.Title.Contains(request.SearchTerm) || x.Description.Contains(request.SearchTerm));
+            if (request.Filters != null)
+                post = post.Where(x => x.FeedStatus.Equals(request.Filters));
+            int totalRecord = await post.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalRecord / request.PageSize);
+            var skip = (request.PageNumber - 1) * request.PageSize;
+            post = post.Skip(skip).Take(request.PageSize).AsQueryable();
+            
+            
             var result =await post.Select(x => new PostViewDto
             {
                 Title = x.Title,
@@ -36,6 +48,7 @@ namespace AskJavra.Repositories.Service
                 FeedStatus = x.FeedStatus,
                 PostTypeName = GetEnumDescription(x.PostType),
                 FeedStatusName = GetEnumDescription(x.FeedStatus),
+                IsAnonymous = x.IsAnonymous,
                 Tags = x.Tags.Select(t => new PostTagDto
                 {
                     PostId = t.PostId,
@@ -55,7 +68,14 @@ namespace AskJavra.Repositories.Service
                 }).ToList()
 
             }).ToListAsync();
-            return result;
+
+            responseResult.Feeds = result;
+            responseResult.PageNumber = request.PageNumber;
+            responseResult.PageSize = request.PageSize;
+            responseResult.TotalRecords = totalRecord;
+            responseResult.TotalPages = totalPages;
+
+            return responseResult;
         }
         private static string GetEnumDescription(Enum value)
         {
