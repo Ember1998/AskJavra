@@ -32,13 +32,13 @@ namespace AskJavra.Controllers
                 {
                     var user = await userManager.FindByNameAsync(model.UserName);
                     var role = await userManager.GetRolesAsync(user);
-
+                    
                     return new
                     {
                         Id = user.Id,
                         Email = user.Email,
                         role = role.First(),
-                        firstLogin = !user.EmailConfirmed
+                        firstLogin = !user.Active
                     };
                 }
                 return false;
@@ -120,9 +120,8 @@ namespace AskJavra.Controllers
                 return new JsonResult(new SerializableError(ModelState).ToList());
             }
             var user = await userManager.FindByIdAsync(resetViewModel.Id);
+            user.Active = true;
             var token = await userManager.GeneratePasswordResetTokenAsync(user);
-            var emailToken = await userManager.GeneratePasswordResetTokenAsync(user);
-            var test = await userManager.ConfirmEmailAsync(user, emailToken);
             var result = await userManager.ResetPasswordAsync(user, token, resetViewModel.Password);
             return Ok(result.Succeeded);
         }
