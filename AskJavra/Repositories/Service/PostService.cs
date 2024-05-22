@@ -21,11 +21,11 @@ namespace AskJavra.Repositories.Service
 
         public async Task<List<PostViewDto>> GetAllAsync()
         {
-            var post = await _dbSet.Include(t => t.Tags).ThenInclude(x=>x.Tag).Include(p => p.Threads).Include(X=>X.UpVotes).ToListAsync();
+            var post =  _dbSet.Include(t => t.Tags).ThenInclude(x=>x.Tag).Include(p => p.Threads).Include(X=>X.UpVotes).AsQueryable();
             //var potType = post[0].PostType.GetDisplayName();
 
             //var potTypStringe = GetEnumDescription(post[0].PostType);
-            var result = post.Select(x => new PostViewDto
+            var result =await post.Select(x => new PostViewDto
             {
                 Title = x.Title,
                 Description = x.Description,
@@ -54,7 +54,7 @@ namespace AskJavra.Repositories.Service
                     ThreadTitle = t.ThreadTitle
                 }).ToList()
 
-            }).ToList();
+            }).ToListAsync();
             return result;
         }
         private static string GetEnumDescription(Enum value)
