@@ -62,25 +62,25 @@ namespace AskJavra.Controllers
                 return BadRequest(ModelState);
         }
 
-        [HttpPost("ThreadTag")]
-        public async Task<IActionResult> CreateThreadTag(Guid threadId, [FromBody] List<ThreadTagDto> dto)
-        {
-            if (ModelState.IsValid)
-            {
-                var post = await _postThreadService.GetByIdAsync(threadId);
-                var result = await _postTagService.AddPostThreadTagAsync(dto, post.Data);
+        //[HttpPost("ThreadTag")]
+        //public async Task<IActionResult> CreateThreadTag(Guid threadId, [FromBody] List<ThreadTagDto> dto)
+        //{
+        //    if (ModelState.IsValid)
+        //    {
+        //        var post = await _postThreadService.GetByIdAsync(threadId);
+        //        var result = await _postTagService.AddPostThreadTagAsync(dto, post.Data);
 
-                // Ensure result.Data is not null before accessing Id
-                if (result.Data == null)
-                {
-                    return StatusCode(500, result); ;
-                }
+        //        // Ensure result.Data is not null before accessing Id
+        //        if (result.Data == null)
+        //        {
+        //            return StatusCode(500, result); ;
+        //        }
 
-                return CreatedAtAction(nameof(CreatePostTag), new { id = result.Data[0].Id }, result);
-            }
-            else
-                return BadRequest(ModelState);
-        }
+        //        return CreatedAtAction(nameof(CreatePostTag), new { id = result.Data[0].Id }, result);
+        //    }
+        //    else
+        //        return BadRequest(ModelState);
+        //}
         [HttpPut("{postTagId}")]
         public async Task<IActionResult> UpdatePostTag(int postTagId, [FromBody] PostTagDto entity)
         {
@@ -96,21 +96,21 @@ namespace AskJavra.Controllers
             else if (response.Data != null && response.Success) return Ok(response);
             else return StatusCode(500, response);
         }
-        [HttpPut("{threadTagId}")]
-        public async Task<IActionResult> UpdateThreadTag(int threadTagId, [FromBody] ThreadTagDto entity)
-        {
-            if (threadTagId < 1 || !ModelState.IsValid || entity.PostThreadId != null)
-            {
-                var errorResponse = new ResponseDto<Tag>(false, "Invalid entity", null);
-                return BadRequest(errorResponse);
-            }
-            var thread = await _postService.GetByIdAsync((Guid)entity.PostThreadId);
-            var response = await _postTagService.UpdatePostThreadAsync(threadTagId, entity, thread.Data);
+        //[HttpPut("{threadTagId}")]
+        //public async Task<IActionResult> UpdateThreadTag(int threadTagId, [FromBody] ThreadTagDto entity)
+        //{
+        //    if (threadTagId < 1 || !ModelState.IsValid || entity.PostThreadId != null)
+        //    {
+        //        var errorResponse = new ResponseDto<Tag>(false, "Invalid entity", null);
+        //        return BadRequest(errorResponse);
+        //    }
+        //    var thread = await _postService.GetByIdAsync((Guid)entity.PostThreadId);
+        //    var response = await _postTagService.UpdatePostThreadAsync(threadTagId, entity, thread.Data);
 
-            if (response.Success == false && response.Message == "not found") return NotFound(response);
-            else if (response.Data != null && response.Success) return Ok(response);
-            else return StatusCode(500, response);
-        }
+        //    if (response.Success == false && response.Message == "not found") return NotFound(response);
+        //    else if (response.Data != null && response.Success) return Ok(response);
+        //    else return StatusCode(500, response);
+        //}
         [HttpDelete("{postTagId}")]
         public async Task<IActionResult> Delete(int postTagId)
         {

@@ -11,10 +11,8 @@ namespace AskJavra.Models.Post
         public int Id { get; set; }
         public int? TagId { get; set; }
         public Guid? PostId {get; set;}
-        public Guid? PostThreadId { get; set; }
         public Post? Post { get; set;}
         public Tag? Tag { get; set;}
-        public PostThread? PostThread { get; set; }
         public PostTag() { }
         public PostTag(int? tagId, Guid? postId, Post? post)
         {
@@ -29,20 +27,6 @@ namespace AskJavra.Models.Post
             TagId = tagId;
             PostId = postId;
             Post = post;
-        }
-        public PostTag(int? tagId, Guid? postThreadId, PostThread? postThread)
-        {
-            Id = this.Id;
-            TagId = tagId;
-            PostThreadId = postThreadId;
-            PostThread = postThread;
-        }
-        public PostTag(int id, int? tagId, Guid? postThreadId, PostThread? postThread)
-        {
-            Id = id;
-            TagId = tagId;
-            PostThreadId = postThreadId;
-            PostThread = postThread;
         }
     }
 }

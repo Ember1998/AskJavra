@@ -20,19 +20,7 @@ namespace AskJavra.ViewModels.Dto
         }
         public PostTagDto() {  }
     }
-    public class ThreadTagDto
-    {
-        public int? TagId { get; set; }
-        public Guid? PostThreadId { get; set; }
-        public string TagName { get; set; }
-        public string TagDescription { get; set; } = string.Empty;
-        public ThreadTagDto(int? tagId, Guid? postThreadId)
-        {
-            TagId = tagId;
-            PostThreadId = postThreadId;
-        }
-        public ThreadTagDto() { }
-    }
+   
     public class PostTagAndIdDto : PostThreadDto
     {
         public Guid Id { get; set; }

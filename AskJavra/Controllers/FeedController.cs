@@ -3,6 +3,7 @@ using AskJavra.Models.Root;
 using AskJavra.Repositories.Interface;
 using AskJavra.Repositories.Service;
 using AskJavra.ViewModels.Dto;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AskJavra.Controllers
@@ -19,9 +20,9 @@ namespace AskJavra.Controllers
             _postTagService = postTagService;
         }
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] FeedRequestDto request)
         {
-            var result = await _postService.GetAllAsync();
+            var result = await _postService.GetAllAsync(request);
             return Ok(result);
         }
 

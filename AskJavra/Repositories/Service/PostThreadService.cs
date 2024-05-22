@@ -20,18 +20,12 @@ namespace AskJavra.Repositories.Service
 
         public async Task<List<PostThreadDto>> GetAllAsync()
         {
-            var result = await _dbSet.Include(x=>x.Post).ThenInclude(x=>x.Tags).ThenInclude(x=>x.Tag).Include(x=>x.Tags).ThenInclude(x=>x.Tag).ToListAsync();
+            var result = await _dbSet.Include(x=>x.Post).ThenInclude(x=>x.Tags).ThenInclude(x=>x.Tag).ToListAsync();
             return result.Select(x=> new PostThreadDto
             {
                 PostId = x.PostId,
                 ThreadTitle = x.ThreadTitle,
-                ThreadDescription = x.ThreadDescription,
-                Tags = x.Tags.Select(y=> new ThreadTagDto {
-                    TagId = y.TagId,
-                    PostThreadId = y.PostThreadId,
-                    TagDescription = y.Tag.TagDescription,
-                    TagName = y.Tag.Name
-                }).ToList(),
+                ThreadDescription = x.ThreadDescription,                
                 Post = new PostDto { Description = x.Post.Description,
                     PostType = (Enums.PostType)x.Post.PostType,
                     Title = x.Post.Title, 

@@ -2,6 +2,11 @@
 using AskJavra.Models.Post;
 using AskJavra.ViewModels.Dto;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Extensions;
+using OpenAI_API.Images;
+using System.ComponentModel;
+using System.Linq;
+using System.Reflection;
 
 namespace AskJavra.Repositories.Service
 {
@@ -16,10 +21,29 @@ namespace AskJavra.Repositories.Service
             _dbSet = _context.Set<Post>();
         }
 
-        public async Task<List<PostDto>> GetAllAsync()
+        public async Task<ResponseFeedDto> GetAllAsync(FeedRequestDto request)
         {
-            var post = await _dbSet.Include(t => t.Tags).ThenInclude(x=>x.Tag).Include(p => p.Threads).ToListAsync();
-            return post.Select(x=> new PostDto
+            var responseResult = new ResponseFeedDto();
+            var post =  _dbSet.Include(t => t.Tags).ThenInclude(x=>x.Tag).Include(p => p.Threads).Include(X=>X.UpVotes).AsQueryable();
+            if (post == null)
+                return responseResult;
+
+            if (request.SearchTerm != null && request.SearchTerm.Length > 0)
+                post = post.Where(x => x.Title.Contains(request.SearchTerm) || x.Description.Contains(request.SearchTerm));
+            
+            if (request.Filters != null)
+                post = post.Where(x => x.FeedStatus.Equals(request.Filters));
+            //if (request.TagIds != null)
+            //    //post = post.Where(x => x.Tags.Select(y=>y.Id).ToArray().Contains(request.TagIds));
+            //    post = post.Where(x => request.TagIds.Contains(x.Tags.Select(y=>y.TagId)));
+
+            int totalRecord = await post.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalRecord / request.PageSize);
+            var skip = (request.PageNumber - 1) * request.PageSize;
+            post = post.Skip(skip).Take(request.PageSize).AsQueryable();
+            
+            
+            var result =await post.Select(x => new PostViewDto
             {
                 Title = x.Title,
                 Description = x.Description,
@@ -27,7 +51,11 @@ namespace AskJavra.Repositories.Service
                 PostId = x.Id,
                 CreatedBy = x.CreatedBy,
                 CreationAt = x.CreatedAt,
-                Tags = x.Tags.Select(t=> new PostTagDto
+                FeedStatus = x.FeedStatus,
+                PostTypeName = GetEnumDescription(x.PostType),
+                FeedStatusName = GetEnumDescription(x.FeedStatus),
+                IsAnonymous = x.IsAnonymous,
+                Tags = x.Tags.Select(t => new PostTagDto
                 {
                     PostId = t.PostId,
                     TagId = t.TagId,
@@ -37,10 +65,37 @@ namespace AskJavra.Repositories.Service
                     CreatedBy = t.CreatedBy
 
                 }).ToList(),
+                postThreads = x.Threads.Select(t => new PostThreadViewDto
+                {
+                    PostId = t.PostId,
+                    ThreadDescription = t.ThreadDescription,
+                    ThreadId = t.Id,
+                    ThreadTitle = t.ThreadTitle
+                }).ToList()
 
-            }).ToList();
+            }).ToListAsync();
+
+            responseResult.Feeds = result;
+            responseResult.PageNumber = request.PageNumber;
+            responseResult.PageSize = request.PageSize;
+            responseResult.TotalRecords = totalRecord;
+            responseResult.TotalPages = totalPages;
+
+            return responseResult;
         }
+        private static string GetEnumDescription(Enum value)
+        {
+            FieldInfo fi = value.GetType().GetField(value.ToString());
 
+            DescriptionAttribute[] attributes = fi.GetCustomAttributes(typeof(DescriptionAttribute), false) as DescriptionAttribute[];
+
+            if (attributes != null && attributes.Any())
+            {
+                return attributes.First().Description;
+            }
+
+            return value.ToString();
+        }
         public async Task<ResponseDto<Post>> GetByIdAsync(Guid id)
         {
             try
@@ -61,7 +116,7 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
-                var post = new Post(entity.Title, entity.Description, entity.PostType, new List<PostThread>(), new List<PostTag>());
+                var post = new Post(entity.Title, entity.Description, entity.PostType, entity.FeedStatus, new List<PostThread>(), new List<PostTag>());
                 
                 await _dbSet.AddAsync(post);
                 await _context.SaveChangesAsync();
