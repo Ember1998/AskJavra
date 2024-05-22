@@ -167,7 +167,7 @@ namespace AskJavra.Repositories.Service
             try
             {
                 if(await _dbSet.FindAsync(post.Id) == null)
-                    return new ResponseDto<Post>(false, "not found", post);
+                    return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
 
                 _dbSet.Attach(post);
                 _context.Entry(post).State = EntityState.Modified;
