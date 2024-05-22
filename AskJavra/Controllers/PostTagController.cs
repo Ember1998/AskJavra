@@ -44,13 +44,13 @@ namespace AskJavra.Controllers
         }
 
         [HttpPost("PostTag")]
-        public async Task<IActionResult> CreatePostTag(Guid postId, [FromBody] List<PostTagDto> dto)
+        public async Task<IActionResult> CreatePostTag(Guid postId, int[] tagIds)
         {
             if (ModelState.IsValid)
             {
                 var post = await _postService.GetByIdAsync(postId);
                 var postMod = new Post(post.Data.PostId, post.Data.Title, post.Data.Description, post.Data.PostType, post.Data.CreatedBy, post.Data.IsAnonymous);
-                var result = await _postTagService.AddPostTagAsync(dto, postMod);
+                var result = await _postTagService.AddPostTagAsync(tagIds, postMod);
 
                 // Ensure result.Data is not null before accessing Id
                 if (result.Data == null)
