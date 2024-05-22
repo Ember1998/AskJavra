@@ -33,9 +33,9 @@ namespace AskJavra.Repositories.Service
             
             if (request.Filters != null)
                 post = post.Where(x => x.FeedStatus.Equals(request.Filters));
-            //if (request.TagIds != null)
-            //    //post = post.Where(x => x.Tags.Select(y=>y.Id).ToArray().Contains(request.TagIds));
-            //    post = post.Where(x => request.TagIds.Contains(x.Tags.Select(y=>y.TagId)));
+            if (request.TagIds != null)
+                post = post.Where(x => x.Tags.Any(y => request.TagIds.Contains(y.TagId.Value)));
+            //post = post.Where(x => request.TagIds.Contains(x.Tags.Select(y => y.TagId)));
 
             int totalRecord = await post.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalRecord / request.PageSize);
