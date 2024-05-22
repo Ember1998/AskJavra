@@ -52,13 +52,13 @@ namespace AskJavra.Repositories.Service
         //    }
         //}
 
-        public async Task<ResponseDto<List<PostTag>>> AddPostTagAsync(List<PostTagDto> entity, Post post)
+        public async Task<ResponseDto<List<PostTag>>> AddPostTagAsync(int[] tags, Post post)
         {
             try
             {
                 List<PostTag> postTags = new List<PostTag>();
-                foreach (var item in entity)
-                    postTags.Add(new PostTag(item.TagId, item.PostId, post));    
+                foreach (var item in tags)
+                    postTags.Add(new PostTag(item, post.Id, post));    
                 await _dbSet.AddRangeAsync(postTags);
                 await _context.SaveChangesAsync();
 

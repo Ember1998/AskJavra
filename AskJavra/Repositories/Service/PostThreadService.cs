@@ -18,15 +18,16 @@ namespace AskJavra.Repositories.Service
             _postDBSet = _context.Set<Post>();
         }
 
-        public async Task<List<PostThreadDto>> GetAllAsync()
+        public async Task<List<PostThreadViewDto>> GetAllAsync()
         {
             var result = await _dbSet.Include(x=>x.Post).ThenInclude(x=>x.Tags).ThenInclude(x=>x.Tag).ToListAsync();
-            return result.Select(x=> new PostThreadDto
+            return result.Select(x=> new PostThreadViewDto
             {
                 PostId = x.PostId,
                 ThreadTitle = x.ThreadTitle,
                 ThreadDescription = x.ThreadDescription,                
-                Post = new PostDto { Description = x.Post.Description,
+                Post = new PostViewDto
+                { Description = x.Post.Description,
                     PostType = (Enums.PostType)x.Post.PostType,
                     Title = x.Post.Title, 
                     Tags = x.Post.Tags.Select(t => new PostTagDto
@@ -55,7 +56,7 @@ namespace AskJavra.Repositories.Service
                 return new ResponseDto<PostThread>(false, ex.Message, new PostThread());
             }
         }
-        public async Task<ResponseDto<PostThreadDto>> AddAsync(PostThreadViewDto entity)
+        public async Task<ResponseDto<PostThreadViewDto>> AddAsync(PostThreadViewDto entity)
         {
             try
             {
@@ -65,17 +66,17 @@ namespace AskJavra.Repositories.Service
                 if (post != null)
                     post = postFetched;
                 else
-                    return new ResponseDto<PostThreadDto>(false, "Invalid post id", new PostThreadDto());
+                    return new ResponseDto<PostThreadViewDto>(false, "Invalid post id", new PostThreadViewDto());
 
                 var postThread = new PostThread(entity.ThreadTitle, entity.ThreadDescription, entity.PostId, post);
                 await _dbSet.AddAsync(postThread);
                 await _context.SaveChangesAsync();
-                var result = new PostThreadDto
+                var result = new PostThreadViewDto
                 {
                     PostId = postThread.PostId,
                     ThreadTitle = postThread.ThreadTitle,
                     ThreadDescription = postThread.ThreadDescription,
-                    Post = new PostDto
+                    Post = new PostViewDto
                     {
                         Description = postThread.Post.Description,
                         PostType = (Enums.PostType)postThread.Post.PostType,
@@ -90,11 +91,11 @@ namespace AskJavra.Repositories.Service
                         }).ToList(),
                     }
                 };
-                return new ResponseDto<PostThreadDto>(true, "Record added successfully", result);
+                return new ResponseDto<PostThreadViewDto>(true, "Record added successfully", result);
             }
             catch (Exception ex)
             {
-                return new ResponseDto<PostThreadDto>(false, ex.Message, new PostThreadDto());
+                return new ResponseDto<PostThreadViewDto>(false, ex.Message, new PostThreadViewDto());
             }
         }
 

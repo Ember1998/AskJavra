@@ -12,14 +12,15 @@ namespace AskJavra.ViewModels.Dto
         public FeedStatus FeedStatus { get; set; }       
         public string CreatedBy { get; set; }
         public bool IsAnonymous { get; set; }
-        public List<PostTagDto>? Tags { get; set; }
+        public int[] TagIds { get; set; }
+        //public List<PostTagDto>? Tags { get; set; }
         
-        public PostDto(string title, string? description, PostType postType, List<PostTagDto> tags)
+        public PostDto(string title, string? description, PostType postType, int[] tags)
         {
             Title = title;
             Description = description;
             PostType = postType;
-            Tags = tags;
+            TagIds = tags;
         }
         public PostDto() {  }
     }
