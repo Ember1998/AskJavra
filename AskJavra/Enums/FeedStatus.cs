@@ -5,10 +5,12 @@ namespace AskJavra.Enums
     public enum FeedStatus
     {
         [Description("Open")]
-        Open = 101,
+        open = 100,
+        [Description("Rseolved")]
+        resolved = 200,
+        [Description("unanswered")]
+        unanswered = 300,
         [Description("Closed")]
-        Closed = 102,
-        [Description("Resolved")]
-        Resolved = 103
+        closed = 400
     }
 }
