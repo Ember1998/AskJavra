@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Extensions;
 using OpenAI_API.Images;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 
 namespace AskJavra.Repositories.Service
@@ -29,8 +30,13 @@ namespace AskJavra.Repositories.Service
 
             if (request.SearchTerm != null && request.SearchTerm.Length > 0)
                 post = post.Where(x => x.Title.Contains(request.SearchTerm) || x.Description.Contains(request.SearchTerm));
+            
             if (request.Filters != null)
                 post = post.Where(x => x.FeedStatus.Equals(request.Filters));
+            //if (request.TagIds != null)
+            //    //post = post.Where(x => x.Tags.Select(y=>y.Id).ToArray().Contains(request.TagIds));
+            //    post = post.Where(x => request.TagIds.Contains(x.Tags.Select(y=>y.TagId)));
+
             int totalRecord = await post.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalRecord / request.PageSize);
             var skip = (request.PageNumber - 1) * request.PageSize;
