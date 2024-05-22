@@ -49,10 +49,11 @@ namespace AskJavra.Controllers
                 {
                     return StatusCode(500,new ResponseDto<Tag>(false, "Entity creation failed", new Tag()));
                 }
-                if(result.Success && result.Data.Id != Guid.Empty)
+                if(result.Success && result.Data.PostId != Guid.Empty)
                 {
+                    var post = await _postService.GetByIdAsync(result.Data.PostId);
                     if(dto.Tags != null && dto.Tags.Count >0)                       
-                        await _postTagService.AddPostTagAsync(dto.Tags,result.Data);
+                        await _postTagService.AddPostTagAsync(dto.Tags, post.Data);
 
                     return Ok(result);
 
@@ -71,6 +72,7 @@ namespace AskJavra.Controllers
                 return BadRequest(ModelState);
             }
             var post = new Post(id, entity.Title, entity.Description, entity.PostType, entity.CreatedBy, entity.IsAnonymous);
+
             var response = await _postService.UpdateAsync(post);
             if (response.Success == false && response.Message == "not found") return NotFound(response);
             else if (response.Data != null && response.Success) return Ok(response);
