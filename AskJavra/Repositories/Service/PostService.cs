@@ -2,6 +2,7 @@
 using AskJavra.Models.Post;
 using AskJavra.ViewModels.Dto;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Extensions;
 using OpenAI_API.Images;
 using System.ComponentModel;
@@ -112,7 +113,7 @@ namespace AskJavra.Repositories.Service
             }
         }
 
-        public async  Task<ResponseDto<Post>> AddAsync(PostDto entity)
+        public async  Task<ResponseDto<PostViewDto>> AddAsync(PostDto entity)
         {
             try
             {
@@ -121,30 +122,93 @@ namespace AskJavra.Repositories.Service
                 await _dbSet.AddAsync(post);
                 await _context.SaveChangesAsync();
 
-                return new ResponseDto<Post>(true, "Record added successfully", post);
+                var result = new PostViewDto
+                {
+                    Title = post.Title,
+                    Description = post.Description,
+                    PostType = post.PostType,
+                    PostId = post.Id,
+                    CreatedBy = post.CreatedBy,
+                    CreationAt = post.CreatedAt,
+                    FeedStatus = post.FeedStatus,
+                    PostTypeName = GetEnumDescription(post.PostType),
+                    FeedStatusName = GetEnumDescription(post.FeedStatus),
+                    IsAnonymous = post.IsAnonymous,
+                    Tags = post.Tags.Select(t => new PostTagDto
+                    {
+                        PostId = t.PostId,
+                        TagId = t.TagId,
+                        TagDescription = t.Tag.TagDescription,
+                        TagName = t.Tag.Name,
+                        CreationAt = t.CreatedAt,
+                        CreatedBy = t.CreatedBy
+
+                    }).ToList(),
+                    postThreads = post.Threads.Select(t => new PostThreadViewDto
+                    {
+                        PostId = t.PostId,
+                        ThreadDescription = t.ThreadDescription,
+                        ThreadId = t.Id,
+                        ThreadTitle = t.ThreadTitle
+                    }).ToList()
+
+                };
+
+                return new ResponseDto<PostViewDto>(true, "Record added successfully", result);
             }
             catch (Exception ex)
             {
-                return new ResponseDto<Post>(false, ex.Message, new Post());
+                return new ResponseDto<PostViewDto>(false, ex.Message, new PostViewDto());
             }
         }
 
-        public async Task<ResponseDto<Post>> UpdateAsync(Post entity)
+        public async Task<ResponseDto<PostViewDto>> UpdateAsync(Post post)
         {
             try
             {
-                if(await _dbSet.FindAsync(entity.Id) == null)
-                    return new ResponseDto<Post>(false, "not found", entity);
+                if(await _dbSet.FindAsync(post.Id) == null)
+                    return new ResponseDto<Post>(false, "not found", post);
 
-                _dbSet.Attach(entity);
-                _context.Entry(entity).State = EntityState.Modified;
+                _dbSet.Attach(post);
+                _context.Entry(post).State = EntityState.Modified;
                
                 await _context.SaveChangesAsync();
-                return new ResponseDto<Post>(true, "Record updated successfully", entity);
+                var result = new PostViewDto
+                {
+                    Title = post.Title,
+                    Description = post.Description,
+                    PostType = post.PostType,
+                    PostId = post.Id,
+                    CreatedBy = post.CreatedBy,
+                    CreationAt = post.CreatedAt,
+                    FeedStatus = post.FeedStatus,
+                    PostTypeName = GetEnumDescription(post.PostType),
+                    FeedStatusName = GetEnumDescription(post.FeedStatus),
+                    IsAnonymous = post.IsAnonymous,
+                    Tags = post.Tags.Select(t => new PostTagDto
+                    {
+                        PostId = t.PostId,
+                        TagId = t.TagId,
+                        TagDescription = t.Tag.TagDescription,
+                        TagName = t.Tag.Name,
+                        CreationAt = t.CreatedAt,
+                        CreatedBy = t.CreatedBy
+
+                    }).ToList(),
+                    postThreads = post.Threads.Select(t => new PostThreadViewDto
+                    {
+                        PostId = t.PostId,
+                        ThreadDescription = t.ThreadDescription,
+                        ThreadId = t.Id,
+                        ThreadTitle = t.ThreadTitle
+                    }).ToList()
+
+                };
+                return new ResponseDto<PostViewDto>(true, "Record updated successfully", result);
             }
             catch (Exception ex)
             {
-                return new ResponseDto<Post>(false, ex.Message, new Post());
+                return new ResponseDto<PostViewDto>(false, ex.Message, new PostViewDto());
             }
         }
 
