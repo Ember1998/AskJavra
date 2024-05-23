@@ -1,4 +1,5 @@
-﻿using AskJavra.Enums;
+﻿using AskJavra.DataContext;
+using AskJavra.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace AskJavra.ViewModels.Dto
@@ -45,6 +46,7 @@ namespace AskJavra.ViewModels.Dto
         public int TotalUpvoteCount { get; set; }
         public int TotalFeeds { get; set; } 
         public bool IsAnonymous { get; set; }
+        public ApplicationUserViewDtocs CreatedByUser { get; set; }
     }
     public class  FeedRequestDto
     {

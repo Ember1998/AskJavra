@@ -28,4 +28,10 @@ namespace AskJavra.ViewModels.Dto
         public string? ThreadDescription { get; set; }
         public PostViewDto Post { get; set; }
     }
+    public class ThreadUpvoteResponseDto
+    {
+        public string UpvoteBy { get; set; }
+        public string ThreadTitle { get; set; }
+        public string ThreadDescription { get; set; }
+    }
 }
