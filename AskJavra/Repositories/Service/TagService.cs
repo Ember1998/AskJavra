@@ -25,6 +25,7 @@ namespace AskJavra.Repositories.Service
         {
             var result = await _dbSet.Select(x=> new TagViewDto
             {
+                Id = x.Id,
                 Name = x.Name,
                 TagDescription = x.TagDescription,
                 TotalFeedMentions = _dbPostSet.Where(y=>y.TagId == x.Id).Count()
