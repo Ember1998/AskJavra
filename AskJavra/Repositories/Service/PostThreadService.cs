@@ -63,14 +63,14 @@ namespace AskJavra.Repositories.Service
                 return new ResponseDto<PostThread>(false, ex.Message, new PostThread());
             }
         }
-        public async Task<ResponseDto<PostThreadViewDto>> AddAsync(PostThreadViewDto entity)
+        public async Task<ResponseDto<PostThreadViewDto>> AddAsync(PostThreadCreateDto entity)
         {
             try
             {
                 Post post = new Post();
                 var postFetched =await _postDBSet.FindAsync(entity.PostId);
 
-                if (post != null)
+                if (postFetched != null)
                     post = postFetched;
                 else
                     return new ResponseDto<PostThreadViewDto>(false, "Invalid post id", new PostThreadViewDto());
@@ -83,6 +83,7 @@ namespace AskJavra.Repositories.Service
                     PostId = postThread.PostId,
                     ThreadTitle = postThread.ThreadTitle,
                     ThreadDescription = postThread.ThreadDescription,
+                    ThreadId = postThread.Id,
                     Post = new PostViewDto
                     {
                         Description = postThread.Post.Description,
