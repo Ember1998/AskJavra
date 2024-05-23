@@ -64,6 +64,8 @@ namespace AskJavra.Controllers
                 return BadRequest(errorResponse);
             }
             var postThread = new PostThread(id, entity.ThreadTitle, entity.ThreadDescription, entity.PostId);
+            postThread.CreatedBy = entity.CreatedBy;
+
             var response = await _postThreadService.UpdateAsync(postThread);
            
             if (response.Success == false && response.Message == "not found") return NotFound(response);

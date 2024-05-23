@@ -157,7 +157,7 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
-                var post = await _dbSet.FindAsync(id);
+                var post = await _dbSet.Include(t => t.Tags).ThenInclude(x => x.Tag).Include(p => p.Threads).ThenInclude(x => x.ThreadUpVotes).Include(X => X.UpVotes).Where(x=>x.Id == id).FirstOrDefaultAsync();
                 if (post != null)
                 {
                     var result = new PostViewDto
