@@ -5,6 +5,8 @@ using AskJavra.Repositories.Service;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using static AskJavra.Constant.Constants;
 
 namespace AskJavra.Controllers
 {
@@ -14,7 +16,10 @@ namespace AskJavra.Controllers
     {
         private readonly PostService _postService;
         private readonly PostTagService _postTagService;
-        public FeedController(PostService postService, PostTagService postTagService)
+        public FeedController(
+            PostService postService, 
+            PostTagService postTagService
+            )
         {
             _postService = postService;
             _postTagService = postTagService;
@@ -54,7 +59,7 @@ namespace AskJavra.Controllers
                     var post = await _postService.GetByIdAsync(result.Data.PostId);
                     var postMod = new Post(post.Data.PostId, post.Data.Title, post.Data.Description, post.Data.PostType, post.Data.CreatedBy, post.Data.IsAnonymous);
                     if(dto.TagIds != null && dto.TagIds.Length > 0 )                       
-                        await _postTagService.AddPostTagAsync(dto.TagIds, postMod);
+                        await _postTagService.AddPostTagAsync(dto.TagIds, postMod);                   
 
                     return Ok(result);
 
@@ -87,7 +92,9 @@ namespace AskJavra.Controllers
            
             var result = await _postService.DeleteAsync(id);
             if (result != null && result.Success)
+            {
                 return Ok(result);
+            }
             else if (result.Message == "not found")
                 return NotFound(result);
             else
@@ -100,8 +107,15 @@ namespace AskJavra.Controllers
             try
             {
                 var result = await _postService.UpvoteFeed(postId, upvoteBy);
+                
                 if (result.Success)
+                {
+                    //if (result.Data.NeedPointRevoke)
+                    //    await _contributonService.RevokePoint(result.Data.PointUserId, ContributionPointTypes.PostUpvote);
+                    //else
+                    //    await _contributonService.SetPoint(result.Data.PointUserId, ContributionPointTypes.PostUpvote);
                     return Ok(result);
+                }
                 else
                     return BadRequest(result);
             }

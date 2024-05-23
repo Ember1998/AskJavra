@@ -1,11 +1,14 @@
 ﻿using AskJavra.DataContext;
+using AskJavra.Models.Contribution;
 using AskJavra.Models.Post;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel;
 using System.Reflection;
+using static AskJavra.Constant.Constants;
 
 namespace AskJavra.Repositories.Service
 {
@@ -15,6 +18,8 @@ namespace AskJavra.Repositories.Service
         private readonly DbSet<Post> _dbSet;
         private readonly DbSet<PostUpVote> _voteSet;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly DbSet<ContributionPointType> _dbSetPointType;
+        private readonly DbSet<ContributionPoint> _dbSetPoint;
 
         public PostService(
             ApplicationDBContext context,
@@ -25,6 +30,8 @@ namespace AskJavra.Repositories.Service
             _dbSet = _context.Set<Post>();
             _userManager = userManager;
             _voteSet = _context.Set<PostUpVote>();
+            _dbSetPointType = _context.Set<ContributionPointType>();
+            _dbSetPoint = _context.Set<ContributionPoint>();
         }
 
         public async Task<ResponseFeedDto> GetAllAsync(FeedRequestDto request)
@@ -231,7 +238,7 @@ namespace AskJavra.Repositories.Service
                 var post = new Post(entity.Title, entity.Description, entity.PostType, entity.FeedStatus, new List<PostThread>(), new List<PostTag>(), entity.CreatedBy, entity.IsAnonymous);
                 
                 await _dbSet.AddAsync(post);
-                await _context.SaveChangesAsync();
+                //await _context.SaveChangesAsync();
 
                 var result = new PostViewDto
                 {
@@ -281,7 +288,7 @@ namespace AskJavra.Repositories.Service
                     TotalUpvoteCount = post.UpVotes.Count
 
                 };
-
+                await SetPoint(entity.CreatedBy, ContributionPointTypes.PostCreate);
                 return new ResponseDto<PostViewDto>(true, "Record added successfully", result);
             }
             catch (Exception ex)
@@ -349,23 +356,28 @@ namespace AskJavra.Repositories.Service
             }
         }
 
-        public async Task<ResponseDto<PostDto>> DeleteAsync(Guid id)
+        public async Task<ResponseDto<string>> DeleteAsync(Guid id)
         {
             try
             {
+                string userId = string.Empty;
                 var entity = await _dbSet.FindAsync(id);
                 if (entity != null)
                 {
+                    userId = entity.CreatedBy;
                     _dbSet.Remove(entity);
                     await _context.SaveChangesAsync();
-                    return new ResponseDto<PostDto>(true, "Record deleted successfully", new PostDto());
+
+                    await RevokePoint(userId, ContributionPointTypes.PostCreate);
+
+                    return new ResponseDto<string>(true, "Record deleted successfully", userId);
                 }
                 else
-                    return new ResponseDto<PostDto>(false, "not found", new PostDto());
+                    return new ResponseDto<string>(false, "not found", userId);
             }
             catch (Exception ex)
             {
-                return new ResponseDto<PostDto>(false, ex.Message, new PostDto());
+                return new ResponseDto<string>(false, ex.Message, string.Empty);
             }
 
         }
@@ -373,13 +385,18 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
+                string creatorId = string.Empty;
+
                 var user  = await _userManager.FindByIdAsync(upvoteBy);
                 if (user == null)
                     return new ResponseDto<PostUpvoteResponseDto>(false, "User not found", new PostUpvoteResponseDto());
                 var post = await _dbSet.FindAsync(postId);
                 if(post == null) 
                     return new ResponseDto<PostUpvoteResponseDto>(false, "Invalid Post Id", new PostUpvoteResponseDto());
+                
+                creatorId = post.CreatedBy;
                 var checkIfUpVoteAlreadyExist = await _voteSet.Where(x => x.UserId == upvoteBy && x.PostId == postId).FirstOrDefaultAsync();
+                
                 if(checkIfUpVoteAlreadyExist == null)
                 {
                     PostUpVote postUpVote = new PostUpVote
@@ -392,18 +409,25 @@ namespace AskJavra.Repositories.Service
                         Post = post
                     };
                     await _voteSet.AddAsync(postUpVote);
-                    await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync();                   
+
+                    
                     var response = new PostUpvoteResponseDto
                     {
                         PostDescription = post.Description,
                         PostTitle = post.Title,
-                        UpvoteBy = user.FullName
+                        UpvoteBy = user.FullName,
+                        NeedPointRevoke = false,
+                        PointUserId = user.Id
                     };
+
+                   await SetPoint(user.Id, ContributionPointTypes.PostUpvote);
+
                     return new ResponseDto<PostUpvoteResponseDto>(true, "Feed upvote raised succesfully.", response);
                 }
                 else
                 {
-                    return await RevokeUpvoteFeed(checkIfUpVoteAlreadyExist);
+                    return await RevokeUpvoteFeed(checkIfUpVoteAlreadyExist,post, user.Id, user.FullName);
                 }
                
 
@@ -413,15 +437,26 @@ namespace AskJavra.Repositories.Service
                 throw new Exception(ex.Message);
             }
         }
-        public async Task<ResponseDto<PostUpvoteResponseDto>> RevokeUpvoteFeed(PostUpVote postUpVote)
+        public async Task<ResponseDto<PostUpvoteResponseDto>> RevokeUpvoteFeed(PostUpVote postUpVote,Post post, string userId, string userFullName)
         {
             try
             {
+                var response = new PostUpvoteResponseDto
+                {
+                    PostDescription = post.Description,
+                    PostTitle = post.Title,
+                    UpvoteBy = userFullName,
+                    NeedPointRevoke = true,
+                    PointUserId = userId
+                };
                 if (postUpVote != null)
                 {
                     _voteSet.Remove(postUpVote);
                     await _context.SaveChangesAsync();
-                    return new ResponseDto<PostUpvoteResponseDto>(true, "Upvote revoked successfully", new PostUpvoteResponseDto());
+
+                    await RevokePoint(userId, ContributionPointTypes.PostUpvote);
+
+                    return new ResponseDto<PostUpvoteResponseDto>(true, "Upvote revoked successfully", response);
                 }
                 else
                     return new ResponseDto<PostUpvoteResponseDto>(false, "not found", new PostUpvoteResponseDto());
@@ -439,6 +474,51 @@ namespace AskJavra.Repositories.Service
                 else
                     return new ApplicationUserViewDtocs { Email = result.Email, FullName = result.FullName, Id = result.Id, UserName = result.UserName};
         }
-       
+        public async Task<bool> SetPoint(string userId, string pointType)
+        {
+            try
+            {
+                var pointTypeId = await _dbSetPointType.SingleOrDefaultAsync(x => x.Name == pointType);
+                if (pointTypeId == null) return false;
+
+                var point = new ContributionPoint
+                {
+                    ContributionPointTypeId = pointTypeId.Id,
+                    Point = pointTypeId.Point,
+                    UserId = userId
+                };
+
+                await _dbSetPoint.AddAsync(point);
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+        public async Task<bool> RevokePoint(string userId, string pointType)
+        {
+            try
+            {
+                var pointTypeId = await _dbSetPointType.SingleOrDefaultAsync(x => x.Name == pointType);
+
+                if (pointTypeId == null) return false;
+
+                var point = await _dbSetPoint.SingleOrDefaultAsync(x => x.UserId == userId && x.ContributionPointTypeId == pointTypeId.Id);
+
+                if (point == null) return false;
+
+                _dbSetPoint.Remove(point);
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
     }
 }
