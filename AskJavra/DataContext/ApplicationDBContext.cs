@@ -1,4 +1,5 @@
 ﻿using AskJavra.Models;
+using AskJavra.Models.Contribution;
 using AskJavra.Models.Employee;
 using AskJavra.Models.Post;
 using AskJavra.Models.Root;
@@ -21,6 +22,9 @@ namespace AskJavra.DataContext
         public DbSet<Employee> Employees { get; set; }
         public DbSet<PostUpVote> PostUpVotes { get; set; }
         public DbSet<ThreadUpVote> ThreadUpVotes { get; set; }
+        public DbSet<ContributionRank> ContributionRanks { get; set; }
+        public DbSet<ContributionPointType> ContributionPointTypes { get; set; }
+        public DbSet<ContributionPoint> ContributionPoints { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -36,7 +36,7 @@ namespace AskJavra.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] PostThreadViewDto dto)
+        public async Task<IActionResult> Create([FromBody] PostThreadCreateDto dto)
         {
             if (ModelState.IsValid)
             {
@@ -47,7 +47,8 @@ namespace AskJavra.Controllers
                 {
                     return StatusCode(500, result); ;
                 }
-
+                if(result.Success == false)
+                    return BadRequest(result);
                 return CreatedAtAction(nameof(Create), new { id = result.Data.PostId }, result);
             }
             else
@@ -55,9 +56,9 @@ namespace AskJavra.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] PostThreadDto entity)
+        public async Task<IActionResult> Update(Guid id, [FromBody] PostThreadCreateDto entity)
         {
-            if (id != Guid.Empty || !ModelState.IsValid)
+            if (id == Guid.Empty || !ModelState.IsValid)
             {
                 var errorResponse = new ResponseDto<Tag>(false, "Invalid entity", null);
                 return BadRequest(errorResponse);
