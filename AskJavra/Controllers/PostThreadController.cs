@@ -1,6 +1,7 @@
 ﻿using AskJavra.Models.Post;
 using AskJavra.Models.Root;
 using AskJavra.Repositories.Service;
+using AskJavra.Service;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Mvc;
 
@@ -80,6 +81,22 @@ namespace AskJavra.Controllers
             else
                 return StatusCode(500, result);
 
+        }
+        [HttpPost("RevokeOrUpVoteThread/{threadId}/{upvoteBy}")]
+        public async Task<IActionResult> RevokeOrUpVoteThread(Guid threadId, string upvoteBy)
+        {
+            try
+            {
+                var result = await _postThreadService.UpvoteThread(threadId, upvoteBy);
+                if (result.Success)
+                    return Ok(result);
+                else
+                    return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }

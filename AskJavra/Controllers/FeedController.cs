@@ -94,7 +94,7 @@ namespace AskJavra.Controllers
                 return StatusCode(500, result);
 
         }
-        [HttpPost("RevokeOrUpVoteFeed{postId}/{upvoteBy}")]
+        [HttpPost("RevokeOrUpVoteFeed/{postId}/{upvoteBy}")]
         public async Task<IActionResult> RevokeOrUpVoteFeed(Guid postId, string upvoteBy)
         {
             try

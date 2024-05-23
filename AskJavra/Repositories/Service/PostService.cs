@@ -29,7 +29,7 @@ namespace AskJavra.Repositories.Service
         public async Task<ResponseFeedDto> GetAllAsync(FeedRequestDto request)
         {
             var responseResult = new ResponseFeedDto();
-            var post =  _dbSet.Include(t => t.Tags).ThenInclude(x=>x.Tag).Include(p => p.Threads).Include(X=>X.UpVotes).AsQueryable();
+            var post =  _dbSet.Include(t => t.Tags).ThenInclude(x=>x.Tag).Include(p => p.Threads).Include(X=>X.UpVotes).ThenInclude(x=>x.User).AsQueryable();
             if (post == null)
                 return responseResult;
 
@@ -60,6 +60,17 @@ namespace AskJavra.Repositories.Service
                 PostTypeName = GetEnumDescription(x.PostType),
                 FeedStatusName = GetEnumDescription(x.FeedStatus),
                 IsAnonymous = x.IsAnonymous,
+                CreatedByUser =x.CreatedBy != null? _context.Users.Where(z => z.Id == x.CreatedBy)
+                .Select(user => new ApplicationUserViewDtocs
+                {
+                    Id = user.Id,
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    FullName = user.FullName
+
+                })
+                .FirstOrDefault(): new ApplicationUserViewDtocs(),
+                //CreatedByUser = await GetUsersAsync(x.CreatedBy).Result,
                 Tags = x.Tags.Select(t => new PostTagDto
                 {
                     PostId = t.PostId,
@@ -76,7 +87,15 @@ namespace AskJavra.Repositories.Service
                     ThreadDescription = t.ThreadDescription,
                     ThreadId = t.Id,
                     ThreadTitle = t.ThreadTitle
-                }).ToList()
+                }).ToList(),
+                UpVotes = x.UpVotes.Select(y=> new UpvoteCountViewMode
+                {
+                    Id =y.Id,
+                    PostId = y.PostId,
+                    UserId = y.UserId,
+                    UserName = y.User.UserName
+                }).ToList(),
+                TotalUpvoteCount = x.UpVotes.Count
 
             }).ToListAsync();
 
@@ -106,7 +125,9 @@ namespace AskJavra.Repositories.Service
             try
             {
                 var post = await _dbSet.FindAsync(id);
-
+                var check = await GetApplicationUserById("");
+                var check3 = await GetApplicationUserById("c1ff721-ee15-4f61-829c-5ca03a867b64");
+                var check2 = await GetApplicationUserById("c1ff72b1-ee15-4f61-829c-5ca03a867b64");
                 if (post != null)
                 {
                     var result = new PostViewDto
@@ -120,6 +141,14 @@ namespace AskJavra.Repositories.Service
                         FeedStatus = post.FeedStatus,
                         PostTypeName = GetEnumDescription(post.PostType),
                         FeedStatusName = GetEnumDescription(post.FeedStatus),
+                        CreatedByUser = _context.Users.Where(x=>x.Id == post.CreatedBy).Select(user => new ApplicationUserViewDtocs
+                                {
+                                    Id = user.Id,
+                                    UserName = user.UserName,
+                                    Email = user.Email,
+                                    FullName = user.FullName
+
+                                }).FirstOrDefault(),
                         IsAnonymous = post.IsAnonymous,
                         Tags = post.Tags.Select(t => new PostTagDto
                         {
@@ -137,7 +166,15 @@ namespace AskJavra.Repositories.Service
                             ThreadDescription = t.ThreadDescription,
                             ThreadId = t.Id,
                             ThreadTitle = t.ThreadTitle
-                        }).ToList()
+                        }).ToList(),
+                        UpVotes = post.UpVotes.Select(y => new UpvoteCountViewMode
+                        {
+                            Id = y.Id,
+                            PostId = y.PostId,
+                            UserId = y.UserId,
+                            UserName = y.User.UserName
+                        }).ToList(),
+                        TotalUpvoteCount = post.UpVotes.Count
 
                     };
 
@@ -174,6 +211,14 @@ namespace AskJavra.Repositories.Service
                     PostTypeName = GetEnumDescription(post.PostType),
                     FeedStatusName = GetEnumDescription(post.FeedStatus),
                     IsAnonymous = post.IsAnonymous,
+                    CreatedByUser = _context.Users.Where(x => x.Id == post.CreatedBy).Select(user => new ApplicationUserViewDtocs
+                    {
+                        Id = user.Id,
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        FullName = user.FullName
+
+                    }).FirstOrDefault(),
                     Tags = post.Tags.Select(t => new PostTagDto
                     {
                         PostId = t.PostId,
@@ -190,7 +235,15 @@ namespace AskJavra.Repositories.Service
                         ThreadDescription = t.ThreadDescription,
                         ThreadId = t.Id,
                         ThreadTitle = t.ThreadTitle
-                    }).ToList()
+                    }).ToList(),
+                      UpVotes = post.UpVotes.Select(y => new UpvoteCountViewMode
+                      {
+                          Id = y.Id,
+                          PostId = y.PostId,
+                          UserId = y.UserId,
+                          UserName = y.User.UserName
+                      }).ToList(),
+                    TotalUpvoteCount = post.UpVotes.Count
 
                 };
 
@@ -336,9 +389,14 @@ namespace AskJavra.Repositories.Service
                 throw new Exception(ex.Message);
             }
         }
-        //private async Task<ApplicationUser> GetApplicationUserById(string userId)
-        //{
-        //    return await _userManager.FindByIdAsync(userId);
-        //}
+        private async Task<ApplicationUserViewDtocs> GetApplicationUserById(string userId)
+        {
+            var result = await  _userManager.FindByIdAsync(userId);
+                if (result == null)
+                    return new ApplicationUserViewDtocs();
+                else
+                    return new ApplicationUserViewDtocs { Email = result.Email, FullName = result.FullName, Id = result.Id, UserName = result.UserName};
+        }
+       
     }
 }
