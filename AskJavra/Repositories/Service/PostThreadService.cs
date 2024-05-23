@@ -1,8 +1,11 @@
 ﻿using AskJavra.DataContext;
+using AskJavra.Models.Contribution;
 using AskJavra.Models.Post;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using static AskJavra.Constant.Constants;
 
 namespace AskJavra.Repositories.Service
 {
@@ -13,6 +16,9 @@ namespace AskJavra.Repositories.Service
         private readonly DbSet<ThreadUpVote> _threadUpvotedbSet;
         private readonly DbSet<Post> _postDBSet;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly DbSet<ContributionPointType> _dbSetPointType;
+        private readonly DbSet<ContributionPoint> _dbSetPoint;
+
 
         public PostThreadService(
             ApplicationDBContext context
@@ -23,6 +29,8 @@ namespace AskJavra.Repositories.Service
             _postDBSet = _context.Set<Post>();
             _threadUpvotedbSet = _context.Set<ThreadUpVote>();
             _userManager = userManager;
+            _dbSetPointType = _context.Set<ContributionPointType>();
+            _dbSetPoint = _context.Set<ContributionPoint>();
         }
 
         public async Task<List<PostThreadViewDto>> GetAllAsync()
@@ -79,6 +87,10 @@ namespace AskJavra.Repositories.Service
                 postThread.CreatedBy = entity.CreatedBy;
                 await _dbSet.AddAsync(postThread);
                 await _context.SaveChangesAsync();
+
+                if (entity.CreatedBy != null)
+                    await SetPoint(entity.CreatedBy, ContributionPointTypes.ThreadCreate);
+
                 var result = new PostThreadViewDto
                 {
                     PostId = postThread.PostId,
@@ -153,12 +165,15 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
+                string userId = string.Empty;
                 var entity = _dbSet.Find(id);
                 if (entity != null)
                 {
+                    userId = entity.CreatedBy;
                     _dbSet.Remove(entity);
                     await _context.SaveChangesAsync();
-
+                    if (!userId.IsNullOrEmpty())
+                        await RevokePoint(userId, ContributionPointTypes.ThreadCreate);
                     return new ResponseDto<PostThreadDto>(true, "Record deleted successfully", new PostThreadDto(entity.ThreadTitle, entity.ThreadDescription, entity.PostId));
                 }
                 else
@@ -192,6 +207,9 @@ namespace AskJavra.Repositories.Service
                     };
                     await _threadUpvotedbSet.AddAsync(postUpVote);
                     await _context.SaveChangesAsync();
+
+                    if (!user.Id.IsNullOrEmpty())
+                        await SetPoint(user.Id, ContributionPointTypes.ThreadUpvote);
                     var response = new PostUpvoteResponseDto
                     {
                         PostDescription = thread.ThreadDescription,
@@ -202,7 +220,7 @@ namespace AskJavra.Repositories.Service
                 }
                 else
                 {
-                    return await RevokeUpvoteThread(checkIfUpVoteAlreadyExist);
+                    return await RevokeUpvoteThread(checkIfUpVoteAlreadyExist, user.Id);
                 }
 
 
@@ -212,7 +230,7 @@ namespace AskJavra.Repositories.Service
                 throw new Exception(ex.Message);
             }
         }
-        public async Task<ResponseDto<PostUpvoteResponseDto>> RevokeUpvoteThread(ThreadUpVote postUpVote)
+        public async Task<ResponseDto<PostUpvoteResponseDto>> RevokeUpvoteThread(ThreadUpVote postUpVote, string userId)
         {
             try
             {
@@ -220,6 +238,9 @@ namespace AskJavra.Repositories.Service
                 {
                     _threadUpvotedbSet.Remove(postUpVote);
                     await _context.SaveChangesAsync();
+
+                    if(userId.IsNullOrEmpty()) await SetPoint(userId, ContributionPointTypes.ThreadUpvote);
+
                     return new ResponseDto<PostUpvoteResponseDto>(true, "Upvote revoked successfully", new PostUpvoteResponseDto());
                 }
                 else
@@ -228,6 +249,104 @@ namespace AskJavra.Repositories.Service
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
+            }
+        }
+        public async Task<ResponseDto<PostThreadViewDto>> MarkThreadAsSolution(Guid threadId, string markedBy)
+        {
+            try
+            {
+                var postThread = await _dbSet.Include(x=>x.Post).FirstOrDefaultAsync(x=>x.Id == threadId);
+
+                if (postThread == null) return new ResponseDto<PostThreadViewDto> { Message = "Invalid threadId.", Success = false, Data = new PostThreadViewDto()};
+
+                if(postThread.Post.CreatedBy != markedBy) return new ResponseDto<PostThreadViewDto> { Message = "Only Post creater can set this flag.", Success = false, Data = new PostThreadViewDto() };
+
+                postThread.IsSolution = postThread.IsSolution == false ? true: false;
+
+                _dbSet.Attach(postThread);
+                _context.Entry(postThread).State = EntityState.Modified;               
+
+                await _context.SaveChangesAsync();
+
+                if (postThread.IsSolution)
+                    await SetPoint(postThread.CreatedBy, ContributionPointTypes.Resolver);
+                else
+                    await RevokePoint(postThread.CreatedBy, ContributionPointTypes.Resolver);
+
+                var result = new PostThreadViewDto
+                {
+                    PostId = postThread.PostId,
+                    ThreadTitle = postThread.ThreadTitle,
+                    ThreadDescription = postThread.ThreadDescription,
+                    ThreadId = postThread.Id,
+                    Post = new PostViewDto
+                    {
+                        Description = postThread.Post.Description,
+                        PostType = (Enums.PostType)postThread.Post.PostType,
+                        Title = postThread.Post.Title,
+                        Tags = postThread.Post.Tags.Select(t => new PostTagDto
+                        {
+                            PostId = t.PostId,
+                            TagId = t.TagId,
+                            TagDescription = t.Tag.TagDescription,
+                            TagName = t.Tag.Name
+
+                        }).ToList(),
+                    }
+                };
+
+                return new ResponseDto<PostThreadViewDto> { Data = result, Message = "Marked succesfully", Success = true };
+
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+        public async Task<bool> SetPoint(string userId, string pointType)
+        {
+            try
+            {
+                var pointTypeId = await _dbSetPointType.SingleOrDefaultAsync(x => x.Name == pointType);
+                if (pointTypeId == null) return false;
+
+                var point = new ContributionPoint
+                {
+                    ContributionPointTypeId = pointTypeId.Id,
+                    Point = pointTypeId.Point,
+                    UserId = userId
+                };
+
+                await _dbSetPoint.AddAsync(point);
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+        public async Task<bool> RevokePoint(string userId, string pointType)
+        {
+            try
+            {
+                var pointTypeId = await _dbSetPointType.SingleOrDefaultAsync(x => x.Name == pointType);
+
+                if (pointTypeId == null) return false;
+
+                var point = await _dbSetPoint.SingleOrDefaultAsync(x => x.UserId == userId && x.ContributionPointTypeId == pointTypeId.Id);
+
+                if (point == null) return false;
+
+                _dbSetPoint.Remove(point);
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
             }
         }
     }

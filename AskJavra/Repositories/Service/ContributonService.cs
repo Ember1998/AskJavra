@@ -24,7 +24,7 @@ namespace AskJavra.Repositories.Service
             try
             {
                 var pointTypeId = await _dbSetPointType.SingleOrDefaultAsync(x => x.Name == pointType);
-                if (pointTypeId != null) return false;
+                if (pointTypeId == null) return false;
 
                 var point = new ContributionPoint
                 {

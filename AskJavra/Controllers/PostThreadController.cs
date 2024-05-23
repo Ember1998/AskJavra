@@ -101,6 +101,19 @@ namespace AskJavra.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-
+        [HttpPost("MarkThreadAsSolution/{threadId}/{markedBy}")]
+        public async Task<IActionResult> MarkThreadAsSolution(Guid threadId, string markedBy)
+        {
+            try
+            {
+                var result = await _postThreadService.MarkThreadAsSolution(threadId, markedBy);
+                if(result.Success)
+                    return Ok(result);
+                else return BadRequest(result);
+            }catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }

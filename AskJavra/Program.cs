@@ -31,6 +31,7 @@ builder.Services.AddScoped<PostService>();
 builder.Services.AddScoped<TagService>();
 builder.Services.AddScoped<PostTagService>();
 builder.Services.AddScoped<PostThreadService>();
+builder.Services.AddScoped<ContributonService>();
 
 
 
