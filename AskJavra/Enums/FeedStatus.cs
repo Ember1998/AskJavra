@@ -6,7 +6,7 @@ namespace AskJavra.Enums
     {
         [Description("Open")]
         open = 100,
-        [Description("Rseolved")]
+        [Description("Rsolved")]
         resolved = 200,
         [Description("unanswered")]
         unanswered = 300,
