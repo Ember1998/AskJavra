@@ -3,6 +3,7 @@ using AskJavra.Models.Post;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel;
 using System.Reflection;
@@ -349,23 +350,25 @@ namespace AskJavra.Repositories.Service
             }
         }
 
-        public async Task<ResponseDto<PostDto>> DeleteAsync(Guid id)
+        public async Task<ResponseDto<string>> DeleteAsync(Guid id)
         {
             try
             {
+                string userId = string.Empty;
                 var entity = await _dbSet.FindAsync(id);
                 if (entity != null)
                 {
+                    userId = entity.CreatedBy;
                     _dbSet.Remove(entity);
                     await _context.SaveChangesAsync();
-                    return new ResponseDto<PostDto>(true, "Record deleted successfully", new PostDto());
+                    return new ResponseDto<string>(true, "Record deleted successfully", userId);
                 }
                 else
-                    return new ResponseDto<PostDto>(false, "not found", new PostDto());
+                    return new ResponseDto<string>(false, "not found", userId);
             }
             catch (Exception ex)
             {
-                return new ResponseDto<PostDto>(false, ex.Message, new PostDto());
+                return new ResponseDto<string>(false, ex.Message, string.Empty);
             }
 
         }
@@ -373,13 +376,18 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
+                string creatorId = string.Empty;
+
                 var user  = await _userManager.FindByIdAsync(upvoteBy);
                 if (user == null)
                     return new ResponseDto<PostUpvoteResponseDto>(false, "User not found", new PostUpvoteResponseDto());
                 var post = await _dbSet.FindAsync(postId);
                 if(post == null) 
                     return new ResponseDto<PostUpvoteResponseDto>(false, "Invalid Post Id", new PostUpvoteResponseDto());
+                
+                creatorId = post.CreatedBy;
                 var checkIfUpVoteAlreadyExist = await _voteSet.Where(x => x.UserId == upvoteBy && x.PostId == postId).FirstOrDefaultAsync();
+                
                 if(checkIfUpVoteAlreadyExist == null)
                 {
                     PostUpVote postUpVote = new PostUpVote
@@ -392,18 +400,23 @@ namespace AskJavra.Repositories.Service
                         Post = post
                     };
                     await _voteSet.AddAsync(postUpVote);
-                    await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync();                   
+
+                    
                     var response = new PostUpvoteResponseDto
                     {
                         PostDescription = post.Description,
                         PostTitle = post.Title,
-                        UpvoteBy = user.FullName
+                        UpvoteBy = user.FullName,
+                        NeedPointRevoke = false,
+                        PointUserId = user.Id
                     };
+
                     return new ResponseDto<PostUpvoteResponseDto>(true, "Feed upvote raised succesfully.", response);
                 }
                 else
                 {
-                    return await RevokeUpvoteFeed(checkIfUpVoteAlreadyExist);
+                    return await RevokeUpvoteFeed(checkIfUpVoteAlreadyExist,post, user.Id, user.FullName);
                 }
                
 
@@ -413,15 +426,23 @@ namespace AskJavra.Repositories.Service
                 throw new Exception(ex.Message);
             }
         }
-        public async Task<ResponseDto<PostUpvoteResponseDto>> RevokeUpvoteFeed(PostUpVote postUpVote)
+        public async Task<ResponseDto<PostUpvoteResponseDto>> RevokeUpvoteFeed(PostUpVote postUpVote,Post post, string userId, string userFullName)
         {
             try
             {
+                var response = new PostUpvoteResponseDto
+                {
+                    PostDescription = post.Description,
+                    PostTitle = post.Title,
+                    UpvoteBy = userFullName,
+                    NeedPointRevoke = true,
+                    PointUserId = userId
+                };
                 if (postUpVote != null)
                 {
                     _voteSet.Remove(postUpVote);
                     await _context.SaveChangesAsync();
-                    return new ResponseDto<PostUpvoteResponseDto>(true, "Upvote revoked successfully", new PostUpvoteResponseDto());
+                    return new ResponseDto<PostUpvoteResponseDto>(true, "Upvote revoked successfully", response);
                 }
                 else
                     return new ResponseDto<PostUpvoteResponseDto>(false, "not found", new PostUpvoteResponseDto());

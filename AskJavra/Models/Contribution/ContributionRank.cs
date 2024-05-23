@@ -8,8 +8,8 @@ namespace AskJavra.Models.Contribution
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public string Name { get; }
-        public string? Description { get; set; }
+        public string RankName { get; set; }
+        public string? RankDescription { get; set; }
         public int RankMinPoint { get; set; }
         public int RankMaxPoint { get; set; }
     }

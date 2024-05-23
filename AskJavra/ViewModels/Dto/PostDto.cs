@@ -47,7 +47,6 @@ namespace AskJavra.ViewModels.Dto
         public int TotalUpvoteCount { get; set; }
         public int TotalFeeds { get; set; } 
         public bool IsAnonymous { get; set; }
-        public string Screenshot { get; set; }
         public ApplicationUserViewDtocs CreatedByUser { get; set; }
     }
     public class  FeedRequestDto
@@ -79,6 +78,8 @@ namespace AskJavra.ViewModels.Dto
         public string UpvoteBy { get; set; }
         public string PostTitle { get; set; }
         public string PostDescription { get; set; }
+        public bool NeedPointRevoke { get; set; }
+        public string PointUserId { get; set; }
     }
 
 }

@@ -5,6 +5,8 @@ using AskJavra.Repositories.Service;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using static AskJavra.Constant.Constants;
 
 namespace AskJavra.Controllers
 {
@@ -14,10 +16,16 @@ namespace AskJavra.Controllers
     {
         private readonly PostService _postService;
         private readonly PostTagService _postTagService;
-        public FeedController(PostService postService, PostTagService postTagService)
+        private readonly ContributonService _contributonService;
+        public FeedController(
+            PostService postService, 
+            PostTagService postTagService,
+            ContributonService contributonService
+            )
         {
             _postService = postService;
             _postTagService = postTagService;
+            _contributonService = contributonService;
         }
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] FeedRequestDto request)
@@ -56,6 +64,9 @@ namespace AskJavra.Controllers
                     if(dto.TagIds != null && dto.TagIds.Length > 0 )                       
                         await _postTagService.AddPostTagAsync(dto.TagIds, postMod);
 
+                   if(!dto.CreatedBy.IsNullOrEmpty())
+                        await _contributonService.SetPoint(dto.CreatedBy, ContributionPointTypes.PostCreate);
+
                     return Ok(result);
 
                 }
@@ -87,7 +98,11 @@ namespace AskJavra.Controllers
            
             var result = await _postService.DeleteAsync(id);
             if (result != null && result.Success)
+            {
+                if (!result.Data.IsNullOrEmpty())
+                    await _contributonService.RevokePoint(result.Data, ContributionPointTypes.PostCreate);
                 return Ok(result);
+            }
             else if (result.Message == "not found")
                 return NotFound(result);
             else
@@ -100,8 +115,15 @@ namespace AskJavra.Controllers
             try
             {
                 var result = await _postService.UpvoteFeed(postId, upvoteBy);
+                
                 if (result.Success)
+                {
+                    if (result.Data.NeedPointRevoke)
+                        await _contributonService.RevokePoint(result.Data.PointUserId, ContributionPointTypes.PostUpvote);
+                    else
+                        await _contributonService.SetPoint(result.Data.PointUserId, ContributionPointTypes.PostUpvote);
                     return Ok(result);
+                }
                 else
                     return BadRequest(result);
             }
