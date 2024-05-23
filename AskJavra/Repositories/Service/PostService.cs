@@ -1,6 +1,7 @@
 ﻿using AskJavra.DataContext;
 using AskJavra.Models.Post;
 using AskJavra.ViewModels.Dto;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using System.Reflection;
@@ -11,11 +12,18 @@ namespace AskJavra.Repositories.Service
     {
         private readonly ApplicationDBContext _context;
         private readonly DbSet<Post> _dbSet;
+        private readonly DbSet<PostUpVote> _voteSet;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public PostService(ApplicationDBContext context)
+        public PostService(
+            ApplicationDBContext context,
+            UserManager<ApplicationUser> userManager
+            )
         {
             _context = context;
             _dbSet = _context.Set<Post>();
+            _userManager = userManager;
+            _voteSet = _context.Set<PostUpVote>();
         }
 
         public async Task<ResponseFeedDto> GetAllAsync(FeedRequestDto request)
@@ -198,6 +206,8 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
+                post.LastModifiedAt = DateTime.UtcNow;
+
                 if(await _dbSet.FindAsync(post.Id) == null)
                     return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
 
@@ -264,5 +274,71 @@ namespace AskJavra.Repositories.Service
             }
 
         }
+        public async Task<ResponseDto<PostUpvoteResponseDto>> UpvoteFeed(Guid postId, string upvoteBy)
+        {
+            try
+            {
+                var user  = await _userManager.FindByIdAsync(upvoteBy);
+                if (user == null)
+                    return new ResponseDto<PostUpvoteResponseDto>(false, "User not found", new PostUpvoteResponseDto());
+                var post = await _dbSet.FindAsync(postId);
+                if(post == null) 
+                    return new ResponseDto<PostUpvoteResponseDto>(false, "Invalid Post Id", new PostUpvoteResponseDto());
+                var checkIfUpVoteAlreadyExist = await _voteSet.Where(x => x.UserId == upvoteBy && x.PostId == postId).FirstOrDefaultAsync();
+                if(checkIfUpVoteAlreadyExist == null)
+                {
+                    PostUpVote postUpVote = new PostUpVote
+                    {
+                        CreatedAt = DateTime.Now,
+                        CreatedBy = upvoteBy,
+                        UserId = user.Id,
+                        User = user,
+                        PostId = postId,
+                        Post = post
+                    };
+                    await _voteSet.AddAsync(postUpVote);
+                    await _context.SaveChangesAsync();
+                    var response = new PostUpvoteResponseDto
+                    {
+                        PostDescription = post.Description,
+                        PostTitle = post.Title,
+                        UpvoteBy = user.FullName
+                    };
+                    return new ResponseDto<PostUpvoteResponseDto>(true, "Feed upvote raised succesfully.", response);
+                }
+                else
+                {
+                    return await RevokeUpvoteFeed(checkIfUpVoteAlreadyExist);
+                }
+               
+
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+        public async Task<ResponseDto<PostUpvoteResponseDto>> RevokeUpvoteFeed(PostUpVote postUpVote)
+        {
+            try
+            {
+                if (postUpVote != null)
+                {
+                    _voteSet.Remove(postUpVote);
+                    await _context.SaveChangesAsync();
+                    return new ResponseDto<PostUpvoteResponseDto>(true, "Upvote revoked successfully", new PostUpvoteResponseDto());
+                }
+                else
+                    return new ResponseDto<PostUpvoteResponseDto>(false, "not found", new PostUpvoteResponseDto());
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+        //private async Task<ApplicationUser> GetApplicationUserById(string userId)
+        //{
+        //    return await _userManager.FindByIdAsync(userId);
+        //}
     }
 }

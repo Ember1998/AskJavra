@@ -68,17 +68,18 @@ namespace AskJavra.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] PostDto entity)
         {
+
             if (id == Guid.Empty || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
             var post = new Post(id, entity.Title, entity.Description, entity.PostType, entity.CreatedBy, entity.IsAnonymous);
-
+            post.LastModifiedBy = entity.UpdatedBy;
             var response = await _postService.UpdateAsync(post);
             if (response.Success == false && response.Message == "not found") return NotFound(response);
             else if (response.Data != null && response.Success) return Ok(response);
             else return StatusCode(500, response);
-        }
+        }        
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
@@ -92,6 +93,22 @@ namespace AskJavra.Controllers
             else
                 return StatusCode(500, result);
 
+        }
+        [HttpPost("RevokeOrUpVoteFeed{postId}/{upvoteBy}")]
+        public async Task<IActionResult> RevokeOrUpVoteFeed(Guid postId, string upvoteBy)
+        {
+            try
+            {
+                var result = await _postService.UpvoteFeed(postId, upvoteBy);
+                if (result.Success)
+                    return Ok(result);
+                else
+                    return BadRequest(result);
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }

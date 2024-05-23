@@ -12,6 +12,7 @@ namespace AskJavra.ViewModels.Dto
         public FeedStatus FeedStatus { get; set; }       
         public string CreatedBy { get; set; }
         public bool IsAnonymous { get; set; }
+        public string? UpdatedBy { get; set; }
         public List<PostTagDto>? Tags { get; set; }
         
         public PostDto(string title, string? description, PostType postType, List<PostTagDto> tags)
@@ -67,6 +68,12 @@ namespace AskJavra.ViewModels.Dto
     {
         public string SortBy { get; set; }
         public string SordOrder { get; set; }
+    }
+    public class PostUpvoteResponseDto
+    {
+        public string UpvoteBy { get; set; }
+        public string PostTitle { get; set; }
+        public string PostDescription { get; set; }
     }
 
 }
