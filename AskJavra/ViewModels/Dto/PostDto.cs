@@ -15,6 +15,7 @@ namespace AskJavra.ViewModels.Dto
         public string UpdatedBy { get; set; }
         public bool IsAnonymous { get; set; }
         public int[] TagIds { get; set; }
+        public string Screenshot { get; set; }
         //public List<PostTagDto>? Tags { get; set; }
         
         public PostDto(string title, string? description, PostType postType, int[] tags)
@@ -46,6 +47,7 @@ namespace AskJavra.ViewModels.Dto
         public int TotalUpvoteCount { get; set; }
         public int TotalFeeds { get; set; } 
         public bool IsAnonymous { get; set; }
+        public string Screenshot { get; set; }
         public ApplicationUserViewDtocs CreatedByUser { get; set; }
     }
     public class  FeedRequestDto

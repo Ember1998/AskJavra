@@ -29,7 +29,7 @@ namespace AskJavra.Repositories.Service
         public async Task<ResponseFeedDto> GetAllAsync(FeedRequestDto request)
         {
             var responseResult = new ResponseFeedDto();
-            var post =  _dbSet.Include(t => t.Tags).ThenInclude(x=>x.Tag).Include(p => p.Threads).Include(X=>X.UpVotes).ThenInclude(x=>x.User).AsQueryable();
+            var post =  _dbSet.Include(t => t.Tags).ThenInclude(x=>x.Tag).Include(p => p.Threads).ThenInclude(x=>x.ThreadUpVotes).Include(X=>X.UpVotes).ThenInclude(x=>x.User).AsQueryable();
             if (post == null)
                 return responseResult;
 
@@ -46,8 +46,8 @@ namespace AskJavra.Repositories.Service
             var totalPages = (int)Math.Ceiling((double)totalRecord / request.PageSize);
             var skip = (request.PageNumber - 1) * request.PageSize;
             post = post.Skip(skip).Take(request.PageSize).AsQueryable();
-            
-            
+
+            //var check = post.ToList();
             var result =await post.Select(x => new PostViewDto
             {
                 Title = x.Title,
@@ -86,7 +86,15 @@ namespace AskJavra.Repositories.Service
                     PostId = t.PostId,
                     ThreadDescription = t.ThreadDescription,
                     ThreadId = t.Id,
-                    ThreadTitle = t.ThreadTitle
+                    ThreadTitle = t.ThreadTitle,
+                    ThreadUpVoteCount = t.ThreadUpVotes.Count,
+                    ThreadUpVotes = t.ThreadUpVotes.Select(upThread=>new ThreadUpvoteResponseDto
+                    {
+                         ThreadDescription = upThread.Thread.ThreadDescription,
+                         ThreadTitle = upThread.Thread.ThreadTitle,
+                         UpvoteBy = upThread.UserId
+                    }).ToList()
+
                 }).ToList(),
                 UpVotes = x.UpVotes.Select(y=> new UpvoteCountViewMode
                 {
@@ -125,9 +133,6 @@ namespace AskJavra.Repositories.Service
             try
             {
                 var post = await _dbSet.FindAsync(id);
-                var check = await GetApplicationUserById("");
-                var check3 = await GetApplicationUserById("c1ff721-ee15-4f61-829c-5ca03a867b64");
-                var check2 = await GetApplicationUserById("c1ff72b1-ee15-4f61-829c-5ca03a867b64");
                 if (post != null)
                 {
                     var result = new PostViewDto
@@ -194,6 +199,10 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
+                if (!IsValidEnumValue(entity.FeedStatus))
+                    return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
+                if (!IsValidEnumValue(entity.PostType))
+                    return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
                 var post = new Post(entity.Title, entity.Description, entity.PostType, entity.FeedStatus, new List<PostThread>(), new List<PostTag>(), entity.CreatedBy, entity.IsAnonymous);
                 
                 await _dbSet.AddAsync(post);
@@ -234,7 +243,8 @@ namespace AskJavra.Repositories.Service
                         PostId = t.PostId,
                         ThreadDescription = t.ThreadDescription,
                         ThreadId = t.Id,
-                        ThreadTitle = t.ThreadTitle
+                        ThreadTitle = t.ThreadTitle,
+
                     }).ToList(),
                       UpVotes = post.UpVotes.Select(y => new UpvoteCountViewMode
                       {
@@ -254,11 +264,18 @@ namespace AskJavra.Repositories.Service
                 return new ResponseDto<PostViewDto>(false, ex.Message, new PostViewDto());
             }
         }
-
+        public static bool IsValidEnumValue<TEnum>(TEnum value) where TEnum : struct, Enum
+        {
+            return Enum.IsDefined(typeof(TEnum), value);
+        }
         public async Task<ResponseDto<PostViewDto>> UpdateAsync(Post post)
         {
             try
             {
+                if (!IsValidEnumValue(post.FeedStatus))
+                    return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
+                if (!IsValidEnumValue(post.PostType))
+                    return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
                 post.LastModifiedAt = DateTime.UtcNow;
 
                 if(await _dbSet.FindAsync(post.Id) == null)

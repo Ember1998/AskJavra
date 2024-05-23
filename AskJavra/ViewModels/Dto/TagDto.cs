@@ -19,5 +19,6 @@
     {
         public string Name { get; set; }
         public string? TagDescription { get; set; }
+        public int TotalFeedMentions { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AskJavra.DataContext;
+using AskJavra.Models.Post;
 using AskJavra.Models.Root;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -11,16 +12,23 @@ namespace AskJavra.Repositories.Service
     {
         private readonly ApplicationDBContext _context;
         private readonly DbSet<Tag> _dbSet;
+        private readonly DbSet<PostTag> _dbPostSet;
 
         public TagService(ApplicationDBContext context)
         {
             _context = context;
             _dbSet = _context.Set<Tag>();
+            _dbPostSet = _context.Set<PostTag>();
         }
 
-        public async Task<IEnumerable<Tag>> GetAllAsync()
+        public async Task<IEnumerable<TagViewDto>> GetAllAsync()
         {
-            var result = await _dbSet.ToListAsync();
+            var result = await _dbSet.Select(x=> new TagViewDto
+            {
+                Name = x.Name,
+                TagDescription = x.TagDescription,
+                TotalFeedMentions = _dbPostSet.Where(y=>y.TagId == x.Id).Count()
+            }).ToListAsync();
             return result;
         }
 
