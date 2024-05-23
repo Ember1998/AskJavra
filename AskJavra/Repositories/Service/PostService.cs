@@ -3,6 +3,7 @@ using AskJavra.Models.Post;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel;
 using System.Reflection;
 
@@ -31,7 +32,7 @@ namespace AskJavra.Repositories.Service
             var responseResult = new ResponseFeedDto();
             var post =  _dbSet.Include(t => t.Tags).ThenInclude(x=>x.Tag).Include(p => p.Threads).ThenInclude(x=>x.ThreadUpVotes).Include(X=>X.UpVotes).ThenInclude(x=>x.User).AsQueryable();
             if (post == null)
-                return responseResult;
+                return responseResult;            
 
             if (request.SearchTerm != null && request.SearchTerm.Length > 0)
                 post = post.Where(x => x.Title.Contains(request.SearchTerm) || x.Description.Contains(request.SearchTerm));
@@ -41,6 +42,30 @@ namespace AskJavra.Repositories.Service
             if (request.TagIds != null)
                 post = post.Where(x => x.Tags.Any(y => request.TagIds.Contains(y.TagId.Value)));
             //post = post.Where(x => request.TagIds.Contains(x.Tags.Select(y => y.TagId)));
+            bool isSorted = false;
+            do
+            {
+                switch (request.SortBy)
+                {
+                    case "title":
+                        post = request.SortOrder == "asc" ? post.OrderBy(x => x.Title) : post.OrderByDescending(x => x.Title);
+                        isSorted = true;
+                        break;
+                    case "creation":
+                        post = request.SortOrder == "asc" ? post.OrderBy(x => x.CreatedAt) : post.OrderByDescending(x => x.CreatedAt);
+                        isSorted = true;
+                        break;
+                    case "upvote":
+                        post = request.SortOrder == "asc" ? post.OrderBy(x => x.UpVotes.Count) : post.OrderByDescending(x => x.UpVotes.Count);
+                        isSorted = true;
+                        break;
+                    default:
+                        // Default sort by CreatedAt descending if SortBy is not specified or invalid
+                        post = post.OrderByDescending(x => x.CreatedAt);
+                        isSorted = true;
+                        break;
+                }
+            } while (!isSorted);
 
             int totalRecord = await post.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalRecord / request.PageSize);
