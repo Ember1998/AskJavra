@@ -26,6 +26,7 @@ namespace AskJavra.ViewModels.Dto
         [Required]
         public Guid PostId { get; set; }
         public string? ThreadDescription { get; set; }
+        public string CreatedBy { get; set; }
     }
     public class PostThreadUpdateDto
     {

@@ -32,7 +32,7 @@ namespace AskJavra.Controllers
                 {
                     var user = await userManager.FindByNameAsync(model.UserName);
                     var role = await userManager.GetRolesAsync(user);
-                    
+
                     return new
                     {
                         Id = user.Id,
@@ -86,7 +86,8 @@ namespace AskJavra.Controllers
         [HttpGet("GetAll")]
         public IActionResult GetAllUsers()
         {
-            return Ok(userManager.Users.Select(x => new UserApiModel { Id = x.Id, FullName = x.FullName, UserName = x.UserName, Active = x.Active, PhoneNumber = x.PhoneNumber }));
+            return Ok(userManager.Users.Select(x => new UserApiModel { 
+                Id = x.Id, FullName = x.FullName, UserName = x.UserName, Active = x.Active, PhoneNumber = x.PhoneNumber, Department = x.Department, Email = x.Email }));
         }
 
         [AllowAnonymous]

@@ -76,6 +76,7 @@ namespace AskJavra.Repositories.Service
                     return new ResponseDto<PostThreadViewDto>(false, "Invalid post id", new PostThreadViewDto());
 
                 var postThread = new PostThread(entity.ThreadTitle, entity.ThreadDescription, entity.PostId, post);
+                postThread.CreatedBy = entity.CreatedBy;
                 await _dbSet.AddAsync(postThread);
                 await _context.SaveChangesAsync();
                 var result = new PostThreadViewDto
