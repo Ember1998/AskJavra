@@ -194,6 +194,7 @@ namespace AskJavra.Repositories.Service
                         FeedStatus = post.FeedStatus,
                         PostTypeName = GetEnumDescription(post.PostType),
                         FeedStatusName = GetEnumDescription(post.FeedStatus),
+                        Screenshot = post.ScreenshotPath,
                         CreatedByUser = _context.Users.Where(x=>x.Id == post.CreatedBy).Select(user => new ApplicationUserViewDtocs
                                 {
                                     Id = user.Id,
