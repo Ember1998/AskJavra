@@ -1,6 +1,7 @@
 ﻿using AskJavra.DataContext;
 using AskJavra.Enums;
 using AskJavra.Models.Contribution;
+using AskJavra.Repositories.Service;
 using AskJavra.ViewModels;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Authorization;
@@ -21,7 +22,9 @@ namespace AskJavra.Controllers
         private readonly ApplicationDBContext _dbContext;
         private readonly DbSet<ContributionRank> _dbSetRank;
         private readonly DbSet<ContributionPoint> _dbSetPoint;
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager, ApplicationDBContext dbContext)
+        private readonly ContributonService _contributonService;
+
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager, ApplicationDBContext dbContext, ContributonService contributonService)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -29,6 +32,7 @@ namespace AskJavra.Controllers
             _dbContext = dbContext;
             _dbSetRank = _dbContext.Set<ContributionRank>();
             _dbSetPoint = _dbContext.Set<ContributionPoint>();
+            _contributonService = contributonService;
         }
         [AllowAnonymous]
         [HttpPost("login")]
@@ -93,10 +97,24 @@ namespace AskJavra.Controllers
 
         [AllowAnonymous]
         [HttpGet("GetAll")]
-        public IActionResult GetAllUsers()
+        public async Task<IActionResult> GetAllUsers()
         {
-            return Ok(userManager.Users.Select(x => new UserApiModel { 
-                Id = x.Id, FullName = x.FullName, UserName = x.UserName, Active = x.Active, PhoneNumber = x.PhoneNumber, Department = x.Department, Email = x.Email }));
+            UserApiViewDto dto = new UserApiViewDto();
+            var resut = await userManager.Users.Select(x => new UserApiModel
+            {
+                Id = x.Id,
+                FullName = x.FullName,
+                UserName = x.UserName,
+                Active = x.Active,
+                PhoneNumber = x.PhoneNumber,
+                Department = x.Department,
+                Email = x.Email
+            }).ToListAsync();
+            foreach (var item in resut)
+                item.UserRank = await GetUserTotalPoint(item.Id);
+            dto.userApi = resut;
+            dto.RankDetails = await GetTotalrank();
+            return Ok(dto);
         }
 
         [AllowAnonymous]
@@ -149,6 +167,28 @@ namespace AskJavra.Controllers
                 return new UserRankDetails();
             }
         }
+        //private static UserRankDetails GetUserTotalPoints(string userId)
+        //{
+        //    try
+        //    {
+        //        var result = _dbContext.ContributionRank.Where(x => x.UserId == userId).Select(x => x.Point).ToArray();
+        //        int total_point = result.Sum();
+        //        //var resultttt = await _dbSetRank.Where(x => x.RankMinPoint <= total_point && x.RankMaxPoint >= total_point).Select(y => new UserRankDetails
+        //        //{
+        //        //    RankName = y.RankName,
+        //        //    TotalPoint = total_point
+        //        //}).FirstOrDefaultAsync();
+        //        return  _dbSetRank.Where(x => x.RankMinPoint <= total_point && x.RankMaxPoint >= total_point).Select(y => new UserRankDetails
+        //        {
+        //            RankName = y.RankName,
+        //            TotalPoint = total_point
+        //        }).FirstOrDefault();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return new UserRankDetails();
+        //    }
+        //}
         [AllowAnonymous]
         [HttpPost("update")]
         public async Task<IActionResult> Update([FromBody] UserApiModel user)
