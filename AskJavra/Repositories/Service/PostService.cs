@@ -20,10 +20,12 @@ namespace AskJavra.Repositories.Service
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly DbSet<ContributionPointType> _dbSetPointType;
         private readonly DbSet<ContributionPoint> _dbSetPoint;
+        private readonly IConfiguration _configuration;
 
         public PostService(
             ApplicationDBContext context,
-            UserManager<ApplicationUser> userManager
+            UserManager<ApplicationUser> userManager,
+            IConfiguration configuration
             )
         {
             _context = context;
@@ -32,6 +34,7 @@ namespace AskJavra.Repositories.Service
             _voteSet = _context.Set<PostUpVote>();
             _dbSetPointType = _context.Set<ContributionPointType>();
             _dbSetPoint = _context.Set<ContributionPoint>();
+            _configuration = configuration;
         }
 
         public async Task<ResponseFeedDto> GetAllAsync(FeedRequestDto request)
@@ -241,7 +244,7 @@ namespace AskJavra.Repositories.Service
             }
         }
 
-        public async  Task<ResponseDto<PostViewDto>> AddAsync(PostDto entity)
+        public async  Task<ResponseDto<PostViewDto>> AddAsync(PostDto entity, IFormFile file)
         {
             try
             {
@@ -250,10 +253,14 @@ namespace AskJavra.Repositories.Service
                 if (!IsValidEnumValue(entity.PostType))
                     return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
                 var post = new Post(entity.Title, entity.Description, entity.PostType, entity.FeedStatus, new List<PostThread>(), new List<PostTag>(), entity.CreatedBy, entity.IsAnonymous);
-                
-                await _dbSet.AddAsync(post);
-                //await _context.SaveChangesAsync();
+                string imagePath = string.Empty;
+                //if (file != null)
+                //    UploadFile(file);
 
+                await _dbSet.AddAsync(post);
+
+                await _context.SaveChangesAsync();
+               
                 var result = new PostViewDto
                 {
                     Title = post.Title,
@@ -312,7 +319,39 @@ namespace AskJavra.Repositories.Service
                 return new ResponseDto<PostViewDto>(false, ex.Message, new PostViewDto());
             }
         }
-        public static bool IsValidEnumValue<TEnum>(TEnum value) where TEnum : struct, Enum
+        private async Task<string> UploadFile(IFormFile file)
+        {
+            try
+            {
+                var uploadPath = _configuration.GetValue<string>("ImageUploadPath");
+                if (!string.IsNullOrEmpty(uploadPath))
+                    if (!Directory.Exists(uploadPath))
+                    {
+                        Directory.CreateDirectory(uploadPath);
+                    }
+                if (file == null || file.Length == 0)
+                {
+                    return string.Empty;
+                }
+
+                var relativePath = Path.Combine(uploadPath, file.FileName);
+
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+                return filePath;
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+            //}
+            public static bool IsValidEnumValue<TEnum>(TEnum value) where TEnum : struct, Enum
         {
             return Enum.IsDefined(typeof(TEnum), value);
         }

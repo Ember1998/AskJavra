@@ -13,7 +13,6 @@ namespace AskJavra.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class FeedController : Controller
     {
         private readonly PostService _postService;
@@ -45,11 +44,11 @@ namespace AskJavra.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] PostDto dto)
+        public async Task<IActionResult> Create([FromBody] PostDto dto, IFormFile? ScreenShot)
         {
             if (ModelState.IsValid)
             {
-                var result = await _postService.AddAsync(dto);
+                var result = await _postService.AddAsync(dto, ScreenShot);
 
                 // Ensure result.Data is not null before accessing Id
                 if (result.Data == null)
