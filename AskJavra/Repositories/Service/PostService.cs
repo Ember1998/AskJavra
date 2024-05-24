@@ -50,7 +50,7 @@ namespace AskJavra.Repositories.Service
                 post = post.Where(x => x.Tags.Any(y => request.TagIds.Contains(y.TagId.Value)));
             //post = post.Where(x => request.TagIds.Contains(x.Tags.Select(y => y.TagId)));
 
-            if (request.UserId.IsNullOrEmpty())
+            if (!request.UserId.IsNullOrEmpty())
                 post = post.Where(x => x.CreatedBy == request.UserId);
 
             bool isSorted = false;
