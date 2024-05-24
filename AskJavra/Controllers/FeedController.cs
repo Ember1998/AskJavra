@@ -81,7 +81,7 @@ namespace AskJavra.Controllers
             }
             var post = new Post(id, entity.Title, entity.Description, entity.PostType, entity.CreatedBy, entity.IsAnonymous);
             post.LastModifiedBy = entity.UpdatedBy;
-            var response = await _postService.UpdateAsync(post);
+            var response = await _postService.UpdateAsync(post, entity.ScreenShot);
             if (response.Success == false && response.Message == "not found") return NotFound(response);
             else if (response.Data != null && response.Success) return Ok(response);
             else return StatusCode(500, response);

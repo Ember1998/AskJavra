@@ -219,8 +219,15 @@ namespace AskJavra.Repositories.Service
                             ThreadDescription = t.ThreadDescription,
                             ThreadId = t.Id,
                             ThreadTitle = t.ThreadTitle,
-                            CreatedAt = t.CreatedAt,
-                            CreatedBy = t.CreatedBy,
+                            CreatedByUser = t.CreatedBy != null ? _context.Users.Where(z => z.Id == t.CreatedBy)
+                                        .Select(user => new ApplicationUserViewDtocs
+                                        {
+                                            Id = user.Id,
+                                            UserName = user.UserName,
+                                            Email = user.Email,
+                                            FullName = user.FullName
+
+                                        }).FirstOrDefault() : new ApplicationUserViewDtocs(),
                             ThreadUpVotes = t.ThreadUpVotes.Select(upThread => new ThreadUpvoteResponseDto
                             {
                                 ThreadDescription = upThread.Thread.ThreadDescription,
@@ -305,8 +312,15 @@ namespace AskJavra.Repositories.Service
                         ThreadDescription = t.ThreadDescription,
                         ThreadId = t.Id,
                         ThreadTitle = t.ThreadTitle,
-                        CreatedBy = t.CreatedBy,
-                        CreatedAt = t.CreatedAt
+                        CreatedByUser = t.CreatedBy != null ? _context.Users.Where(z => z.Id == t.CreatedBy)
+                        .Select(user => new ApplicationUserViewDtocs
+                        {
+                            Id = user.Id,
+                            UserName = user.UserName,
+                            Email = user.Email,
+                            FullName = user.FullName
+
+                        }).FirstOrDefault() : new ApplicationUserViewDtocs(),
 
                     }).ToList(),
                       UpVotes = post.UpVotes.Select(y => new UpvoteCountViewMode
@@ -363,7 +377,7 @@ namespace AskJavra.Repositories.Service
         {
             return Enum.IsDefined(typeof(TEnum), value);
         }
-        public async Task<ResponseDto<PostViewDto>> UpdateAsync(Post post)
+        public async Task<ResponseDto<PostViewDto>> UpdateAsync(Post post,IFormFile file)
         {
             try
             {
@@ -375,6 +389,10 @@ namespace AskJavra.Repositories.Service
 
                 if(await _dbSet.FindAsync(post.Id) == null)
                     return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
+
+                string imagePath = string.Empty;
+                if (file != null)
+                    imagePath = await UploadFile(file);
 
                 _dbSet.Attach(post);
                 _context.Entry(post).State = EntityState.Modified;
