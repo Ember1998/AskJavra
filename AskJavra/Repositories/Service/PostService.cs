@@ -364,7 +364,7 @@ namespace AskJavra.Repositories.Service
                 {
                     await file.CopyToAsync(stream);
                 }
-                return filePath;
+                return relativePath;
 
             }
             catch (Exception ex)

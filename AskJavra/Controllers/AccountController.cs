@@ -51,6 +51,11 @@ namespace AskJavra.Controllers
                         firstLogin = !user.Active
                     };
                 }
+                else if(result.IsLockedOut)
+                {
+                    return Unauthorized("User is Locked.");
+
+                }
                 return false;
             }
             catch (Exception ex)
@@ -58,33 +63,6 @@ namespace AskJavra.Controllers
 
                 throw ex;
             }
-        }
-        private async Task AddTokenExpirationInfo(ApplicationUser user, int span = 1 * 24 * 60)
-        {
-            var expiresAt = DateTime.Now.Add(TimeSpan.FromMinutes(span));
-            var tokenExpiredAtClaim = new Claim("ActivtationTokenExpiredAt", expiresAt.ToUniversalTime().Ticks.ToString());
-            await userManager.AddClaimAsync(user, tokenExpiredAtClaim);
-        }
-
-        private async Task<bool> TokenExpiredValidate(ApplicationUser user)
-        {
-            var claims = (await userManager.GetClaimsAsync(user))
-                .Where(c => c.Type == "ActivtationTokenExpiredAt");
-            var expiredAt = claims.FirstOrDefault()?.Value;
-            bool expired = true;    // default value
-            if (expiredAt != null)
-            {
-                var expires = Convert.ToInt64(expiredAt);
-                var now = DateTime.Now.Ticks;
-                expired = now <= expires ? false : true;
-            }
-            else
-            {
-                expired = false;
-            }
-            // clear claims
-            await userManager.RemoveClaimsAsync(user, claims);
-            return expired;
         }
 
 
@@ -105,7 +83,6 @@ namespace AskJavra.Controllers
                         return BadRequest(ModelState);
                     }
                     var response = await userManager.CreateAsync(user, model.Password);
-                    await AddTokenExpirationInfo(user);
 
                     Enum.TryParse(model.UserType, out UserType myStatus);
                     var data = await userManager.AddToRoleAsync(user, myStatus.ToString());
