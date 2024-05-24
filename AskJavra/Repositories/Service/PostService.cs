@@ -49,6 +49,10 @@ namespace AskJavra.Repositories.Service
             if (request.TagIds != null)
                 post = post.Where(x => x.Tags.Any(y => request.TagIds.Contains(y.TagId.Value)));
             //post = post.Where(x => request.TagIds.Contains(x.Tags.Select(y => y.TagId)));
+
+            if (request.UserId.IsNullOrEmpty())
+                post = post.Where(x => x.CreatedBy == request.UserId);
+
             bool isSorted = false;
             do
             {
@@ -120,6 +124,8 @@ namespace AskJavra.Repositories.Service
                     ThreadId = t.Id,
                     ThreadTitle = t.ThreadTitle,
                     ThreadUpVoteCount = t.ThreadUpVotes.Count,
+                    CreatedBy = t.CreatedBy,
+                    CreatedAt = t.CreatedAt,
                     ThreadUpVotes = t.ThreadUpVotes.Select(upThread=>new ThreadUpvoteResponseDto
                     {
                          ThreadDescription = upThread.Thread.ThreadDescription,
@@ -202,7 +208,15 @@ namespace AskJavra.Repositories.Service
                             PostId = t.PostId,
                             ThreadDescription = t.ThreadDescription,
                             ThreadId = t.Id,
-                            ThreadTitle = t.ThreadTitle
+                            ThreadTitle = t.ThreadTitle,
+                            CreatedAt = t.CreatedAt,
+                            CreatedBy = t.CreatedBy,
+                            ThreadUpVotes = t.ThreadUpVotes.Select(upThread => new ThreadUpvoteResponseDto
+                            {
+                                ThreadDescription = upThread.Thread.ThreadDescription,
+                                ThreadTitle = upThread.Thread.ThreadTitle,
+                                UpvoteBy = upThread.UserId
+                            }).ToList()
                         }).ToList(),
                         UpVotes = post.UpVotes.Select(y => new UpvoteCountViewMode
                         {
@@ -276,6 +290,8 @@ namespace AskJavra.Repositories.Service
                         ThreadDescription = t.ThreadDescription,
                         ThreadId = t.Id,
                         ThreadTitle = t.ThreadTitle,
+                        CreatedBy = t.CreatedBy,
+                        CreatedAt = t.CreatedAt
 
                     }).ToList(),
                       UpVotes = post.UpVotes.Select(y => new UpvoteCountViewMode

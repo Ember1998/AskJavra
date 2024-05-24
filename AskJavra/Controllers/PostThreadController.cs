@@ -3,12 +3,14 @@ using AskJavra.Models.Root;
 using AskJavra.Repositories.Service;
 using AskJavra.Service;
 using AskJavra.ViewModels.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AskJavra.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class PostThreadController : Controller
     {
         private readonly PostThreadService _postThreadService;

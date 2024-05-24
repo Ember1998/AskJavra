@@ -57,6 +57,7 @@ namespace AskJavra.ViewModels.Dto
         public int PageSize { get; set; } = 10;
         public int[]? TagIds { get; set; }
         public FeedStatus[]? Filters { get; set; }
+        public string? UserId { get; set; }
 
     }
     public class ResponseFeedDto
