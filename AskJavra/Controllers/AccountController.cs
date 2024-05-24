@@ -1,9 +1,12 @@
 ﻿using AskJavra.DataContext;
 using AskJavra.Enums;
+using AskJavra.Models.Contribution;
 using AskJavra.ViewModels;
+using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AskJavra.Controllers
 {
@@ -15,11 +18,17 @@ namespace AskJavra.Controllers
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly RoleManager<IdentityRole> roleManager;
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager)
+        private readonly ApplicationDBContext _dbContext;
+        private readonly DbSet<ContributionRank> _dbSetRank;
+        private readonly DbSet<ContributionPoint> _dbSetPoint;
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager, ApplicationDBContext dbContext)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.roleManager = roleManager;
+            _dbContext = dbContext;
+            _dbSetRank = _dbContext.Set<ContributionRank>();
+            _dbSetPoint = _dbContext.Set<ContributionPoint>();
         }
         [AllowAnonymous]
         [HttpPost("login")]
@@ -94,10 +103,52 @@ namespace AskJavra.Controllers
         [HttpGet("GetById/{id}")]
         public async Task<IActionResult> GetById(string id)
         {
-            return Ok(await userManager.FindByIdAsync(id));
+            UserWithRankDto dto = new UserWithRankDto();
+
+            dto.User =  await userManager.FindByIdAsync(id);
+            dto.RankDetails = await GetTotalrank();
+            dto.UserRank = await GetUserTotalPoint(id);
+
+            return Ok(dto);
         }
-
-
+        private async Task<List<RankDetails>> GetTotalrank()
+        {
+            try
+            {
+                return await _dbSetRank.Select(x => new RankDetails
+                {
+                    MaxPoint = x.RankMaxPoint,
+                    MinPoint = x.RankMinPoint,
+                    RankName = x.RankName
+                }).ToListAsync();
+            }
+            catch
+            {
+                return new List<RankDetails>();
+            }
+        }
+        private async Task<UserRankDetails> GetUserTotalPoint(string userId)
+        {
+            try
+            {
+                var result = _dbSetPoint.Where(x => x.UserId == userId).Select(x => x.Point).ToArray();
+                int total_point = result.Sum();
+                //var resultttt = await _dbSetRank.Where(x => x.RankMinPoint <= total_point && x.RankMaxPoint >= total_point).Select(y => new UserRankDetails
+                //{
+                //    RankName = y.RankName,
+                //    TotalPoint = total_point
+                //}).FirstOrDefaultAsync();
+                return await _dbSetRank.Where(x => x.RankMinPoint <= total_point && x.RankMaxPoint >= total_point).Select(y => new UserRankDetails
+                {
+                    RankName = y.RankName,
+                    TotalPoint = total_point
+                }).FirstOrDefaultAsync();
+            }
+            catch(Exception ex)
+            {
+                return new UserRankDetails();
+            }
+        }
         [AllowAnonymous]
         [HttpPost("update")]
         public async Task<IActionResult> Update([FromBody] UserApiModel user)
