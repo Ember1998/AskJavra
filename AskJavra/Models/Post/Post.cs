@@ -17,7 +17,7 @@ namespace AskJavra.Models.Post
         public  PostType PostType { get; set; }
         public FeedStatus FeedStatus { get; set; }
         public bool IsAnonymous { get; set; } = false;
-        public string ScreenshotPath { get; set; }
+        public string? ScreenshotPath { get; set; }
         public virtual List<PostThread> Threads { get; set; }= new List<PostThread>();
         public virtual List<PostTag> Tags { get; set; } = new List<PostTag>();
         public virtual List<PostUpVote> UpVotes { get; set; } = new List<PostUpVote>();
