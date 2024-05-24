@@ -99,6 +99,7 @@ namespace AskJavra.Repositories.Service
                 PostTypeName = GetEnumDescription(x.PostType),
                 FeedStatusName = GetEnumDescription(x.FeedStatus),
                 IsAnonymous = x.IsAnonymous,
+                Screenshot = x.ScreenshotPath,
                 CreatedByUser =x.CreatedBy != null? _context.Users.Where(z => z.Id == x.CreatedBy)
                 .Select(user => new ApplicationUserViewDtocs
                 {
@@ -149,7 +150,7 @@ namespace AskJavra.Repositories.Service
                     Id =y.Id,
                     PostId = y.PostId,
                     UserId = y.UserId,
-                    UserName = y.User.UserName
+                    //UserName = y.User.UserName
                 }).ToList(),
                 TotalUpvoteCount = x.UpVotes.Count
 
@@ -241,7 +242,7 @@ namespace AskJavra.Repositories.Service
                             Id = y.Id,
                             PostId = y.PostId,
                             UserId = y.UserId,
-                            UserName = y.User.UserName
+                            //UserName = y.User.UserName
                         }).ToList(),
                         TotalUpvoteCount = post.UpVotes.Count
 
@@ -329,7 +330,7 @@ namespace AskJavra.Repositories.Service
                           Id = y.Id,
                           PostId = y.PostId,
                           UserId = y.UserId,
-                          UserName = y.User.UserName
+                         // UserName = y.User.UserName
                       }).ToList(),
                     TotalUpvoteCount = post.UpVotes.Count
 
