@@ -49,9 +49,8 @@ namespace AskJavra.ViewModels.Dto
         public string? ThreadDescription { get; set; }
         public PostViewDto Post { get; set; }
         public List<ThreadUpvoteResponseDto> ThreadUpVotes { get; set; } = new List<ThreadUpvoteResponseDto>();
-        public string CreatedBy { get; set; }
-        public DateTime CreatedAt { get; set; }
         public int ThreadUpVoteCount { get; set; }
+        public ApplicationUserViewDtocs CreatedByUser { get; set; }
     }
     public class ThreadUpvoteResponseDto
     {

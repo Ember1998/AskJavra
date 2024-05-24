@@ -16,7 +16,7 @@ namespace AskJavra.ViewModels.Dto
         public bool IsAnonymous { get; set; }
         public int[] TagIds { get; set; }
 
-        public IFormFile ScreenShot { get; set; }
+        public IFormFile? ScreenShot { get; set; }
         //public List<PostTagDto>? Tags { get; set; }
 
         public PostDto(string title, string? description, PostType postType, int[] tags)

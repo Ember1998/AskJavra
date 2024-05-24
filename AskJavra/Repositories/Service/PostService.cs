@@ -127,8 +127,15 @@ namespace AskJavra.Repositories.Service
                     ThreadId = t.Id,
                     ThreadTitle = t.ThreadTitle,
                     ThreadUpVoteCount = t.ThreadUpVotes.Count,
-                    CreatedBy = t.CreatedBy,
-                    CreatedAt = t.CreatedAt,
+                    CreatedByUser = t.CreatedBy != null ? _context.Users.Where(z => z.Id == t.CreatedBy)
+                        .Select(user => new ApplicationUserViewDtocs
+                        {
+                            Id = user.Id,
+                            UserName = user.UserName,
+                            Email = user.Email,
+                            FullName = user.FullName
+
+                        }).FirstOrDefault() : new ApplicationUserViewDtocs(),
                     ThreadUpVotes = t.ThreadUpVotes.Select(upThread=>new ThreadUpvoteResponseDto
                     {
                          ThreadDescription = upThread.Thread.ThreadDescription,
