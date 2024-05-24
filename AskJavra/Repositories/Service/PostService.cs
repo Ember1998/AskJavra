@@ -254,9 +254,10 @@ namespace AskJavra.Repositories.Service
                     return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
                 var post = new Post(entity.Title, entity.Description, entity.PostType, entity.FeedStatus, new List<PostThread>(), new List<PostTag>(), entity.CreatedBy, entity.IsAnonymous);
                 string imagePath = string.Empty;
-                //if (file != null)
-                //    UploadFile(file);
-
+                if (file != null)
+                  imagePath = await UploadFile(file);
+                if(!imagePath.IsNullOrEmpty())
+                    post.ScreenshotPath = imagePath;
                 await _dbSet.AddAsync(post);
 
                 await _context.SaveChangesAsync();

@@ -44,11 +44,11 @@ namespace AskJavra.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] PostDto dto, IFormFile? ScreenShot)
+        public async Task<IActionResult> Create([FromForm] PostDto dto)
         {
             if (ModelState.IsValid)
             {
-                var result = await _postService.AddAsync(dto, ScreenShot);
+                var result = await _postService.AddAsync(dto, dto.ScreenShot);
 
                 // Ensure result.Data is not null before accessing Id
                 if (result.Data == null)
