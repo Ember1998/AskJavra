@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace AskJavra.Controllers
 {
@@ -54,6 +55,11 @@ namespace AskJavra.Controllers
                         firstLogin = !user.Active
                     };
                 }
+                else if(result.IsLockedOut)
+                {
+                    return Unauthorized("User is Locked.");
+
+                }
                 return false;
             }
             catch (Exception ex)
@@ -61,6 +67,13 @@ namespace AskJavra.Controllers
 
                 throw ex;
             }
+        }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await signInManager.SignOutAsync();
+            return Ok("Success");
         }
 
         [AllowAnonymous]
@@ -79,6 +92,7 @@ namespace AskJavra.Controllers
                         return BadRequest(ModelState);
                     }
                     var response = await userManager.CreateAsync(user, model.Password);
+
                     Enum.TryParse(model.UserType, out UserType myStatus);
                     var data = await userManager.AddToRoleAsync(user, myStatus.ToString());
                     return data.Succeeded;
