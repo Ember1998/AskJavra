@@ -10,6 +10,7 @@ namespace AskJavra.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class PostThreadController : Controller
     {
         private readonly PostThreadService _postThreadService;

@@ -65,7 +65,12 @@ namespace AskJavra.Controllers
             }
         }
 
-
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await signInManager.SignOutAsync();
+            return Ok("Success");
+        }
 
         [AllowAnonymous]
         [HttpPost("register")]
