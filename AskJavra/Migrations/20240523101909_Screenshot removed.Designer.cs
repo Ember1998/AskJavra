@@ -4,6 +4,7 @@ using AskJavra.DataContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AskJavra.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240523101909_Screenshot removed")]
+    partial class Screenshotremoved
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -96,77 +99,6 @@ namespace AskJavra.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("AskJavra.Models.Contribution.ContributionPoint", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ContributionPointTypeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Point")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ContributionPointTypeId");
-
-                    b.ToTable("ContributionPoints");
-                });
-
-            modelBuilder.Entity("AskJavra.Models.Contribution.ContributionPointType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Point")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ContributionPointTypes");
-                });
-
-            modelBuilder.Entity("AskJavra.Models.Contribution.ContributionRank", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("RankDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RankMaxPoint")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RankMinPoint")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RankName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ContributionRanks");
                 });
 
             modelBuilder.Entity("AskJavra.Models.Demo", b =>
@@ -262,9 +194,6 @@ namespace AskJavra.Migrations
 
                     b.Property<int>("PostType")
                         .HasColumnType("int");
-
-                    b.Property<string>("ScreenshotPath")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -564,17 +493,6 @@ namespace AskJavra.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("AskJavra.Models.Contribution.ContributionPoint", b =>
-                {
-                    b.HasOne("AskJavra.Models.Contribution.ContributionPointType", "ContributionPointType")
-                        .WithMany("Points")
-                        .HasForeignKey("ContributionPointTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ContributionPointType");
-                });
-
             modelBuilder.Entity("AskJavra.Models.Post.PostTag", b =>
                 {
                     b.HasOne("AskJavra.Models.Post.Post", "Post")
@@ -688,11 +606,6 @@ namespace AskJavra.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("AskJavra.Models.Contribution.ContributionPointType", b =>
-                {
-                    b.Navigation("Points");
                 });
 
             modelBuilder.Entity("AskJavra.Models.Post.Post", b =>

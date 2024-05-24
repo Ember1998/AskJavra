@@ -3,13 +3,14 @@ using AskJavra.Models.Root;
 using AskJavra.Repositories.Interface;
 using AskJavra.Repositories.Service;
 using AskJavra.ViewModels.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AskJavra.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
+//    [Authorize]
     public class PostTagController : Controller
     {
         private readonly PostService _postService;

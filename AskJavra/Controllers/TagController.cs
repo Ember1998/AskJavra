@@ -1,6 +1,7 @@
 ﻿using AskJavra.Models.Root;
 using AskJavra.Repositories.Service;
 using AskJavra.ViewModels.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AskJavra.Controllers

@@ -1,9 +1,14 @@
 ﻿using AskJavra.DataContext;
 using AskJavra.Enums;
+using AskJavra.Models.Contribution;
+using AskJavra.Repositories.Service;
 using AskJavra.ViewModels;
+using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace AskJavra.Controllers
 {
@@ -15,11 +20,20 @@ namespace AskJavra.Controllers
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly RoleManager<IdentityRole> roleManager;
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager)
+        private readonly ApplicationDBContext _dbContext;
+        private readonly DbSet<ContributionRank> _dbSetRank;
+        private readonly DbSet<ContributionPoint> _dbSetPoint;
+        private readonly ContributonService _contributonService;
+
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager, ApplicationDBContext dbContext, ContributonService contributonService)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.roleManager = roleManager;
+            _dbContext = dbContext;
+            _dbSetRank = _dbContext.Set<ContributionRank>();
+            _dbSetPoint = _dbContext.Set<ContributionPoint>();
+            _contributonService = contributonService;
         }
         [AllowAnonymous]
         [HttpPost("login")]
@@ -32,7 +46,7 @@ namespace AskJavra.Controllers
                 {
                     var user = await userManager.FindByNameAsync(model.UserName);
                     var role = await userManager.GetRolesAsync(user);
-                    
+
                     return new
                     {
                         Id = user.Id,
@@ -41,6 +55,11 @@ namespace AskJavra.Controllers
                         firstLogin = !user.Active
                     };
                 }
+                else if(result.IsLockedOut)
+                {
+                    return Unauthorized("User is Locked.");
+
+                }
                 return false;
             }
             catch (Exception ex)
@@ -48,6 +67,13 @@ namespace AskJavra.Controllers
 
                 throw ex;
             }
+        }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await signInManager.SignOutAsync();
+            return Ok("Success");
         }
 
         [AllowAnonymous]
@@ -66,6 +92,7 @@ namespace AskJavra.Controllers
                         return BadRequest(ModelState);
                     }
                     var response = await userManager.CreateAsync(user, model.Password);
+
                     Enum.TryParse(model.UserType, out UserType myStatus);
                     var data = await userManager.AddToRoleAsync(user, myStatus.ToString());
                     return data.Succeeded;
@@ -84,19 +111,98 @@ namespace AskJavra.Controllers
 
         [AllowAnonymous]
         [HttpGet("GetAll")]
-        public IActionResult GetAllUsers()
+        public async Task<IActionResult> GetAllUsers()
         {
-            return Ok(userManager.Users.Select(x => new UserApiModel { Id = x.Id, FullName = x.FullName, UserName = x.UserName, Active = x.Active, PhoneNumber = x.PhoneNumber }));
+            UserApiViewDto dto = new UserApiViewDto();
+            var resut = await userManager.Users.Select(x => new UserApiModel
+            {
+                Id = x.Id,
+                FullName = x.FullName,
+                UserName = x.UserName,
+                Active = x.Active,
+                PhoneNumber = x.PhoneNumber,
+                Department = x.Department,
+                Email = x.Email
+            }).ToListAsync();
+            foreach (var item in resut)
+                item.UserRank = await GetUserTotalPoint(item.Id);
+            dto.userApi = resut;
+            dto.RankDetails = await GetTotalrank();
+            return Ok(dto);
         }
 
         [AllowAnonymous]
         [HttpGet("GetById/{id}")]
         public async Task<IActionResult> GetById(string id)
         {
-            return Ok(await userManager.FindByIdAsync(id));
+            UserWithRankDto dto = new UserWithRankDto();
+
+            dto.User =  await userManager.FindByIdAsync(id);
+            dto.RankDetails = await GetTotalrank();
+            dto.UserRank = await GetUserTotalPoint(id);
+
+            return Ok(dto);
         }
-
-
+        private async Task<List<RankDetails>> GetTotalrank()
+        {
+            try
+            {
+                return await _dbSetRank.Select(x => new RankDetails
+                {
+                    MaxPoint = x.RankMaxPoint,
+                    MinPoint = x.RankMinPoint,
+                    RankName = x.RankName
+                }).ToListAsync();
+            }
+            catch
+            {
+                return new List<RankDetails>();
+            }
+        }
+        private async Task<UserRankDetails> GetUserTotalPoint(string userId)
+        {
+            try
+            {
+                var result = _dbSetPoint.Where(x => x.UserId == userId).Select(x => x.Point).ToArray();
+                int total_point = result.Sum();
+                //var resultttt = await _dbSetRank.Where(x => x.RankMinPoint <= total_point && x.RankMaxPoint >= total_point).Select(y => new UserRankDetails
+                //{
+                //    RankName = y.RankName,
+                //    TotalPoint = total_point
+                //}).FirstOrDefaultAsync();
+                return await _dbSetRank.Where(x => x.RankMinPoint <= total_point && x.RankMaxPoint >= total_point).Select(y => new UserRankDetails
+                {
+                    RankName = y.RankName,
+                    TotalPoint = total_point
+                }).FirstOrDefaultAsync();
+            }
+            catch(Exception ex)
+            {
+                return new UserRankDetails();
+            }
+        }
+        //private static UserRankDetails GetUserTotalPoints(string userId)
+        //{
+        //    try
+        //    {
+        //        var result = _dbContext.ContributionRank.Where(x => x.UserId == userId).Select(x => x.Point).ToArray();
+        //        int total_point = result.Sum();
+        //        //var resultttt = await _dbSetRank.Where(x => x.RankMinPoint <= total_point && x.RankMaxPoint >= total_point).Select(y => new UserRankDetails
+        //        //{
+        //        //    RankName = y.RankName,
+        //        //    TotalPoint = total_point
+        //        //}).FirstOrDefaultAsync();
+        //        return  _dbSetRank.Where(x => x.RankMinPoint <= total_point && x.RankMaxPoint >= total_point).Select(y => new UserRankDetails
+        //        {
+        //            RankName = y.RankName,
+        //            TotalPoint = total_point
+        //        }).FirstOrDefault();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return new UserRankDetails();
+        //    }
+        //}
         [AllowAnonymous]
         [HttpPost("update")]
         public async Task<IActionResult> Update([FromBody] UserApiModel user)

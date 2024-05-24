@@ -1,7 +1,9 @@
 ﻿using AskJavra.Models.Post;
 using AskJavra.Models.Root;
 using AskJavra.Repositories.Service;
+using AskJavra.Service;
 using AskJavra.ViewModels.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AskJavra.Controllers
@@ -36,7 +38,7 @@ namespace AskJavra.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] PostThreadViewDto dto)
+        public async Task<IActionResult> Create([FromBody] PostThreadCreateDto dto)
         {
             if (ModelState.IsValid)
             {
@@ -47,7 +49,8 @@ namespace AskJavra.Controllers
                 {
                     return StatusCode(500, result); ;
                 }
-
+                if(result.Success == false)
+                    return BadRequest(result);
                 return CreatedAtAction(nameof(Create), new { id = result.Data.PostId }, result);
             }
             else
@@ -55,14 +58,16 @@ namespace AskJavra.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] PostThreadDto entity)
+        public async Task<IActionResult> Update(Guid id, [FromBody] PostThreadCreateDto entity)
         {
-            if (id != Guid.Empty || !ModelState.IsValid)
+            if (id == Guid.Empty || !ModelState.IsValid)
             {
                 var errorResponse = new ResponseDto<Tag>(false, "Invalid entity", null);
                 return BadRequest(errorResponse);
             }
             var postThread = new PostThread(id, entity.ThreadTitle, entity.ThreadDescription, entity.PostId);
+            postThread.CreatedBy = entity.CreatedBy;
+
             var response = await _postThreadService.UpdateAsync(postThread);
            
             if (response.Success == false && response.Message == "not found") return NotFound(response);
@@ -81,6 +86,36 @@ namespace AskJavra.Controllers
             else
                 return StatusCode(500, result);
 
+        }
+        [HttpPost("RevokeOrUpVoteThread/{threadId}/{upvoteBy}")]
+        public async Task<IActionResult> RevokeOrUpVoteThread(Guid threadId, string upvoteBy)
+        {
+            try
+            {
+                var result = await _postThreadService.UpvoteThread(threadId, upvoteBy);
+                if (result.Success)
+                    return Ok(result);
+                else
+                    return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+        [HttpPost("MarkThreadAsSolution/{threadId}/{markedBy}")]
+        public async Task<IActionResult> MarkThreadAsSolution(Guid threadId, string markedBy)
+        {
+            try
+            {
+                var result = await _postThreadService.MarkThreadAsSolution(threadId, markedBy);
+                if(result.Success)
+                    return Ok(result);
+                else return BadRequest(result);
+            }catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }
