@@ -3,6 +3,7 @@ using AskJavra.Models.Root;
 using AskJavra.Repositories.Interface;
 using AskJavra.Repositories.Service;
 using AskJavra.ViewModels.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -12,6 +13,7 @@ namespace AskJavra.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class FeedController : Controller
     {
         private readonly PostService _postService;
