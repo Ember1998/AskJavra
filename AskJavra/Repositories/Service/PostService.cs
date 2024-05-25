@@ -101,7 +101,7 @@ namespace AskJavra.Repositories.Service
                 PostTypeName = GetEnumDescription(x.PostType),
                 FeedStatusName = GetEnumDescription(x.FeedStatus),
                 IsAnonymous = x.IsAnonymous,
-                Screenshot = new FileStream(Path.GetFullPath(x.ScreenshotPath), FileMode.Open, FileAccess.Read),
+                Screenshot = x.ScreenshotPath != null ? System.IO.File.ReadAllBytes(x.ScreenshotPath):null,
                 CreatedByUser =x.CreatedBy != null? _context.Users.Where(z => z.Id == x.CreatedBy)
                 .Select(user => new ApplicationUserViewDtocs
                 {
@@ -197,7 +197,6 @@ namespace AskJavra.Repositories.Service
                         FeedStatus = post.FeedStatus,
                         PostTypeName = GetEnumDescription(post.PostType),
                         FeedStatusName = GetEnumDescription(post.FeedStatus),
-                        Screenshot =  new FileStream(Path.GetFullPath(post.ScreenshotPath), FileMode.Open, FileAccess.Read),
                         CreatedByUser = _context.Users.Where(x=>x.Id == post.CreatedBy).Select(user => new ApplicationUserViewDtocs
                                 {
                                     Id = user.Id,
@@ -249,7 +248,9 @@ namespace AskJavra.Repositories.Service
                         TotalUpvoteCount = post.UpVotes.Count
 
                     };
-
+                    if (post.ScreenshotPath != null) {
+                        result.Screenshot = await System.IO.File.ReadAllBytesAsync(post.ScreenshotPath);
+}
                     return new ResponseDto<PostViewDto>(true, "Success", result);
 
                 }
