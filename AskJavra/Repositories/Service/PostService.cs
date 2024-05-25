@@ -52,9 +52,9 @@ namespace AskJavra.Repositories.Service
 
             if (request.Filters != null)
                 post = post.Where(x => request.Filters.Any(y=> (int)x.FeedStatus == y));
-                //post = post.Where(x => x.FeedStatus.Equals(request.Filters));
+            //post = post.Where(x => x.FeedStatus.Equals(request.Filters));
             if (request.TagIds != null)
-                post = post.Where(x => x.Tags.Any(y => request.TagIds.Any(z=>y.Id ==z)));
+                post = post.Where(x => x.Tags.Any(s => request.TagIds.Contains(s.Id)));
             //post = post.Where(x => request.TagIds.Contains(x.Tags.Select(y => y.TagId)));
 
             if (!request.UserId.IsNullOrEmpty())
