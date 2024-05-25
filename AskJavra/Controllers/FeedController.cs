@@ -79,8 +79,14 @@ namespace AskJavra.Controllers
             }
             //var post = new Post(id, entity.Title, entity.Description, (PostType)entity.PostType, entity.CreatedBy, entity.IsAnonymous);
             var post = await _postService.GetPostById(id);
-
+            post.Title = entity.Title;
+            post.Description = entity.Description;
+            post.CreatedBy = entity.CreatedBy;
+            post.PostType = (PostType)entity.PostType;
+            post.FeedStatus = (FeedStatus)entity.FeedStatus;
             post.LastModifiedBy = entity.UpdatedBy;
+            post.LastModifiedBy = entity.CreatedBy;
+
             var response = await _postService.UpdateAsync(post, entity.ScreenShot);
 
             if (response.Success == false && response.Message == "not found") return NotFound(response);
