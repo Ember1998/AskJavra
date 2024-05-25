@@ -391,27 +391,29 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
-               
+                var posted = await _dbSet.FindAsync(post.Id);
                 if (!IsValidEnumValue(post.PostType))
                     return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
                 post.LastModifiedAt = DateTime.UtcNow;
 
-                if(await _dbSet.FindAsync(post.Id) == null)
+                if(posted == null)
                     return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
-
+                posted.Title = post.Title;
+                posted.Description = post.Description;
+                posted.PostType = post.PostType;
                 string imagePath = string.Empty;
                 if (file != null)
                     imagePath = await UploadFile(file);
 
-                _dbSet.Attach(post);
-                _context.Entry(post).State = EntityState.Modified;
+                _dbSet.Attach(posted);
+                _context.Entry(posted).State = EntityState.Modified;
                
                 await _context.SaveChangesAsync();
                 var result = new PostViewDto
                 {
-                    Title = post.Title,
-                    Description = post.Description,
-                    PostType = post.PostType,
+                    Title = posted.Title,
+                    Description = posted.Description,
+                    PostType = posted.PostType,
                     PostId = post.Id,
                     CreatedBy = post.CreatedBy,
                     CreationAt = post.CreatedAt,
