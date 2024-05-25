@@ -388,8 +388,7 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
-                if (!IsValidEnumValue(post.FeedStatus))
-                    return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
+               
                 if (!IsValidEnumValue(post.PostType))
                     return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
                 post.LastModifiedAt = DateTime.UtcNow;
