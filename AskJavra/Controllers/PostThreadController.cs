@@ -118,5 +118,11 @@ namespace AskJavra.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+        [HttpPost("SendEmail")]
+        public async Task<IActionResult> SenEmail(string creatorName, string feedlink, string feedCreatorname, string postTitle, string email)
+        {
+           await _postThreadService.SendEmail(creatorName, feedlink, feedCreatorname, postTitle,email);
+            return Ok();
+        }
     }
 }
