@@ -264,7 +264,10 @@ namespace AskJavra.Repositories.Service
                 return new ResponseDto<PostViewDto>(false, ex.Message, new PostViewDto());
             }
         }
-
+        public async Task<Post> GetPostById(Guid id)
+        {
+            return await _dbSet.FindAsync(id);
+        }
         public async  Task<ResponseDto<PostViewDto>> AddAsync(PostDto entity, IFormFile file)
         {
             try

@@ -54,10 +54,10 @@ namespace AskJavra.Controllers
                 }
                 if (result.Success && result.Data.PostId != Guid.Empty)
                 {
-                    var post = await _postService.GetByIdAsync(result.Data.PostId);
-                    var postMod = new Post(post.Data.PostId, post.Data.Title, post.Data.Description, post.Data.PostType, post.Data.CreatedBy, post.Data.IsAnonymous);
+                    var post =  await _postService.GetPostById(result.Data.PostId);
+                    //var postMod = new Post(post.Data.PostId, post.Data.Title, post.Data.Description, post.Data.PostType, post.Data.CreatedBy, post.Data.IsAnonymous);
                     if (dto.TagIds != null && dto.TagIds.Length > 0)
-                        await _postTagService.AddPostTagAsync(dto.TagIds, postMod);
+                        await _postTagService.AddPostTagAsync(dto.TagIds, post);
 
                     return Ok(result);
 
@@ -79,8 +79,12 @@ namespace AskJavra.Controllers
             var post = new Post(id, entity.Title, entity.Description, (PostType)entity.PostType, entity.CreatedBy, entity.IsAnonymous);
             post.LastModifiedBy = entity.UpdatedBy;
             var response = await _postService.UpdateAsync(post, entity.ScreenShot);
+
             if (response.Success == false && response.Message == "not found") return NotFound(response);
-            else if (response.Data != null && response.Success) return Ok(response);
+            else if (response.Data != null && response.Success)
+            {
+                return Ok(response);
+            }
             else return StatusCode(500, response);
         }
 
