@@ -54,10 +54,10 @@ namespace AskJavra.Controllers
                 }
                 if (result.Success && result.Data.PostId != Guid.Empty)
                 {
-                    var post = await _postService.GetByIdAsync(result.Data.PostId);
-                    var postMod = new Post(post.Data.PostId, post.Data.Title, post.Data.Description, post.Data.PostType, post.Data.CreatedBy, post.Data.IsAnonymous);
+                    var post =  await _postService.GetPostById(result.Data.PostId);
+                    //var postMod = new Post(post.Data.PostId, post.Data.Title, post.Data.Description, post.Data.PostType, post.Data.CreatedBy, post.Data.IsAnonymous);
                     if (dto.TagIds != null && dto.TagIds.Length > 0)
-                        await _postTagService.AddPostTagAsync(dto.TagIds, postMod);
+                        await _postTagService.AddPostTagAsync(dto.TagIds, post);
 
                     return Ok(result);
 
