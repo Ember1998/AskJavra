@@ -23,7 +23,7 @@ namespace AskJavra.Controllers
             _postTagService = postTagService;
         }
         [HttpGet("GetAll")]
-        public async Task<IActionResult> GetAll([FromForm] FeedRequestDto request)
+        public async Task<IActionResult> GetAll([FromQuery] FeedRequestDto request)
         {
             var result = await _postService.GetAllAsync(request);
             return Ok(result);
