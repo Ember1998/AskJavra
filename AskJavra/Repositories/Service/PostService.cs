@@ -54,8 +54,9 @@ namespace AskJavra.Repositories.Service
                 post = post.Where(x => request.Filters.Any(y=> (int)x.FeedStatus == y));
             //post = post.Where(x => x.FeedStatus.Equals(request.Filters));
             if (request.TagIds != null)
-                post = post.Where(x => x.Tags.Any(s => request.TagIds.Contains(s.Id)));
-            //post = post.Where(x => request.TagIds.Contains(x.Tags.Select(y => y.TagId)));
+                post = post.Where(x => x.Tags.Any(y => request.TagIds.Contains(y.TagId.Value)));
+
+            //post = post.Where(x => x.Tags.Any(s => request.TagIds.Contains(s.Id)));
 
             if (!request.UserId.IsNullOrEmpty())
                 post = post.Where(x => x.CreatedBy == request.UserId);
