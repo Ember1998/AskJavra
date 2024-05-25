@@ -2,9 +2,12 @@
 using AskJavra.Models.Contribution;
 using AskJavra.Models.Post;
 using AskJavra.ViewModels.Dto;
+using Azure.Core;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Text.RegularExpressions;
 using static AskJavra.Constant.Constants;
 
 namespace AskJavra.Repositories.Service
@@ -18,11 +21,16 @@ namespace AskJavra.Repositories.Service
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly DbSet<ContributionPointType> _dbSetPointType;
         private readonly DbSet<ContributionPoint> _dbSetPoint;
+        private readonly IEmailSender _emailSender;
+        private readonly IConfiguration _configuration;
 
 
         public PostThreadService(
             ApplicationDBContext context
-            , UserManager<ApplicationUser> userManager)
+            , UserManager<ApplicationUser> userManager,
+            IEmailSender emailSender,
+             IConfiguration configuration
+            )
         {
             _context = context;
             _dbSet = _context.Set<PostThread>();
@@ -31,20 +39,23 @@ namespace AskJavra.Repositories.Service
             _userManager = userManager;
             _dbSetPointType = _context.Set<ContributionPointType>();
             _dbSetPoint = _context.Set<ContributionPoint>();
+            _emailSender = emailSender;
+            _configuration = configuration;
         }
 
         public async Task<List<PostThreadViewDto>> GetAllAsync()
         {
-            var result = await _dbSet.Include(x=>x.Post).ThenInclude(x=>x.Tags).ThenInclude(x=>x.Tag).ToListAsync();
-            return result.Select(x=> new PostThreadViewDto
+            var result = await _dbSet.Include(x => x.Post).ThenInclude(x => x.Tags).ThenInclude(x => x.Tag).ToListAsync();
+            return result.Select(x => new PostThreadViewDto
             {
                 PostId = x.PostId,
                 ThreadTitle = x.ThreadTitle,
-                ThreadDescription = x.ThreadDescription,                
+                ThreadDescription = x.ThreadDescription,
                 Post = new PostViewDto
-                { Description = x.Post.Description,
+                {
+                    Description = x.Post.Description,
                     PostType = (Enums.PostType)x.Post.PostType,
-                    Title = x.Post.Title, 
+                    Title = x.Post.Title,
                     Tags = x.Post.Tags.Select(t => new PostTagDto
                     {
                         PostId = t.PostId,
@@ -57,7 +68,7 @@ namespace AskJavra.Repositories.Service
             }).ToList();
         }
 
-        public async  Task<ResponseDto<PostThread>> GetByIdAsync(Guid id)
+        public async Task<ResponseDto<PostThread>> GetByIdAsync(Guid id)
         {
             try
             {
@@ -76,7 +87,7 @@ namespace AskJavra.Repositories.Service
             try
             {
                 Post post = new Post();
-                var postFetched =await _postDBSet.FindAsync(entity.PostId);
+                var postFetched = await _postDBSet.FindAsync(entity.PostId);
 
                 if (postFetched != null)
                     post = postFetched;
@@ -87,10 +98,20 @@ namespace AskJavra.Repositories.Service
                 postThread.CreatedBy = entity.CreatedBy;
                 await _dbSet.AddAsync(postThread);
                 await _context.SaveChangesAsync();
+                
+                var postCreaterFullName = _context.Users.Where(z => z.Id == post.CreatedBy)
+                 .Select(user => new { user.FullName , user.Email })
+                 .FirstOrDefault();
+                var threadCreaterFullName = _context.Users.Where(z => z.Id == entity.CreatedBy)
+                .Select(user => user.FullName)
+                .FirstOrDefault();
+
+                var feedbasepath = _configuration.GetValue<string>("FEBaseUrl");
+                var path = feedbasepath + postThread.Id;
 
                 if (entity.CreatedBy != null)
                     await SetPoint(entity.CreatedBy, ContributionPointTypes.ThreadCreate);
-
+                await SendEmail(postCreaterFullName.FullName, path, threadCreaterFullName, post.Title, postCreaterFullName.Email);
                 var result = new PostThreadViewDto
                 {
                     PostId = postThread.PostId,
@@ -112,6 +133,7 @@ namespace AskJavra.Repositories.Service
                         }).ToList(),
                     }
                 };
+                await ConfigureSyncEmail(await _userManager.FindByIdAsync(entity.CreatedBy), result);
                 return new ResponseDto<PostThreadViewDto>(true, "Record added successfully", result);
             }
             catch (Exception ex)
@@ -124,11 +146,11 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
-                var post =await _postDBSet.FindAsync(entity.PostId);
+                var post = await _postDBSet.FindAsync(entity.PostId);
                 if (post == null)
-                   return new ResponseDto<PostThreadViewDto>(false, "Invalid post id", new PostThreadViewDto());
+                    return new ResponseDto<PostThreadViewDto>(false, "Invalid post id", new PostThreadViewDto());
                 entity.Post = post;
-                
+
                 _dbSet.Attach(entity);
                 _context.Entry(entity).State = EntityState.Modified;
 
@@ -178,7 +200,7 @@ namespace AskJavra.Repositories.Service
                 }
                 else
                     return new ResponseDto<PostThreadDto>(false, "not found", new PostThreadDto());
-                
+
             }
             catch (Exception ex)
             {
@@ -239,7 +261,7 @@ namespace AskJavra.Repositories.Service
                     _threadUpvotedbSet.Remove(postUpVote);
                     await _context.SaveChangesAsync();
 
-                    if(userId.IsNullOrEmpty()) await SetPoint(userId, ContributionPointTypes.ThreadUpvote);
+                    if (userId.IsNullOrEmpty()) await SetPoint(userId, ContributionPointTypes.ThreadUpvote);
 
                     return new ResponseDto<PostUpvoteResponseDto>(true, "Upvote revoked successfully", new PostUpvoteResponseDto());
                 }
@@ -255,16 +277,16 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
-                var postThread = await _dbSet.Include(x=>x.Post).FirstOrDefaultAsync(x=>x.Id == threadId);
+                var postThread = await _dbSet.Include(x => x.Post).FirstOrDefaultAsync(x => x.Id == threadId);
 
-                if (postThread == null) return new ResponseDto<PostThreadViewDto> { Message = "Invalid threadId.", Success = false, Data = new PostThreadViewDto()};
+                if (postThread == null) return new ResponseDto<PostThreadViewDto> { Message = "Invalid threadId.", Success = false, Data = new PostThreadViewDto() };
 
-                if(postThread.Post.CreatedBy != markedBy) return new ResponseDto<PostThreadViewDto> { Message = "Only Post creater can set this flag.", Success = false, Data = new PostThreadViewDto() };
+                if (postThread.Post.CreatedBy != markedBy) return new ResponseDto<PostThreadViewDto> { Message = "Only Post creater can set this flag.", Success = false, Data = new PostThreadViewDto() };
 
-                postThread.IsSolution = postThread.IsSolution == false ? true: false;
+                postThread.IsSolution = postThread.IsSolution == false ? true : false;
 
                 _dbSet.Attach(postThread);
-                _context.Entry(postThread).State = EntityState.Modified;               
+                _context.Entry(postThread).State = EntityState.Modified;
 
                 await _context.SaveChangesAsync();
 
@@ -298,7 +320,7 @@ namespace AskJavra.Repositories.Service
                 return new ResponseDto<PostThreadViewDto> { Data = result, Message = "Marked succesfully", Success = true };
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -348,6 +370,103 @@ namespace AskJavra.Repositories.Service
             {
                 return false;
             }
+        }
+
+        private async Task ConfigureSyncEmail(ApplicationUser user, PostThreadViewDto dto)
+        {
+            var subject = "Notification";
+            var htmlMessage = $"<html>\r\n<head>\r\n<title>New Comment Notification</title>\r\n<style>\r\n        body {{\r\n            font-family: Arial, sans-serif;\r\n            line-height: 1.6;\r\n        }}\r\n        .container {{\r\n            width: 100%;\r\n            max-width: 600px;\r\n            margin: 0 auto;\r\n            padding: 20px;\r\n            border: 1px solid #ccc;\r\n            border-radius: 10px;\r\n            background-color: #f9f9f9;\r\n        }}\r\n        .header {{\r\n            font-size: 18px;\r\n            font-weight: bold;\r\n            margin-bottom: 10px;\r\n        }}\r\n        .content {{\r\n            font-size: 16px;\r\n            margin-bottom: 20px;\r\n        }}\r\n        .link {{\r\n            display: inline-block;\r\n            padding: 10px 20px;\r\n            font-size: 16px;\r\n            color: #fff;\r\n            background-color: #007bff;\r\n            text-decoration: none;\r\n            border-radius: 5px;\r\n        }}\r\n        .footer {{\r\n            font-size: 14px;\r\n            color: #555;\r\n            margin-top: 20px;\r\n        }}\r\n</style>\r\n</head>\r\n<body>\r\n<div class=\"container\">\r\n<div class=\"header\">Hey [User's Name], There's a New Comment on Your Thread!</div>\r\n<div class=\"content\">\r\n            Just a quick heads-up! Someone just added a new comment to the thread you started about [thread topic].\r\n</div>\r\n<div>\r\n<a href=\"[Link to the Thread]\" class=\"link\">Check it out here</a>\r\n</div>\r\n<div class=\"footer\">\r\n            If you have any questions or need help, just hit reply or reach out to our support team.<br>\r\n            Thanks for being part of our community!<br><br>\r\n            Cheers,<br>\r\n            [Your Name]<br>\r\n            [Your Position]<br>\r\n            [Your Contact Information]<br>\r\n            [Company/Website Name]\r\n</div>\r\n</div>\r\n</body>\r\n</html>";
+
+            await _emailSender.SendEmailAsync(user.Email, subject, htmlMessage);
+        }
+        public async Task<bool> SendEmail(string creatorName, string feedlink, string feedCreatorname, string postTitle, string email)
+        {
+            try
+            {
+                var body = getEmailTemplateOnThreadCreate();
+                var title = "There's a New Comment on Your Feed!";
+
+                var replacements = new Dictionary<string, string>
+                {
+                    { "createName", creatorName },
+                    { "feedLink", feedlink },
+                    { "POST_TITLE", postTitle },
+                    { "FeedCreatorName", feedCreatorname }
+                };
+
+                // Replace the placeholders
+                string emailBody = ReplacePlaceholders(body, replacements);
+                var sendEmailService = new SendEmailService();
+                await sendEmailService.SendEmailAsync(email, title, emailBody);
+                //await _emailSender.SendEmailAsync(email, title, emailBody);
+                return true;
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+            
+        }
+        public string ReplacePlaceholders(string template, Dictionary<string, string> replacements)
+        {
+            string pattern = @"\{\{(\w+)\}\}";
+            return Regex.Replace(template, pattern, match =>
+            {
+                string placeholder = match.Groups[1].Value;
+                return replacements.TryGetValue(placeholder, out string replacement) ? replacement : match.Value;
+            });
+        }
+        private string getEmailTemplateOnThreadCreate()
+        {
+            return @"
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            .card {
+                                max-width: 600px;
+                                margin: auto;
+                                padding: 20px;
+                                border: 1px solid #dcdcdc;
+                                border-radius: 10px;
+                                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                                font-family: Arial, sans-serif;
+                                background-color: #f9f9f9;
+                            }
+                            .card h2 {
+                                color: #333;
+                            }
+                            .card p {
+                                color: #666;
+                                line-height: 1.6;
+                            }
+                            .card a {
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 10px 20px;
+                                color: #fff;
+                                background-color: #007bff;
+                                text-decoration: none;
+                                border-radius: 5px;
+                            }
+                            .card a:hover {
+                                background-color: #0056b3;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class='card'>
+                            <h2>Hey {{createName}}, There's a New Comment on Your Feed!</h2>
+                            <p>Just a quick heads-up! <b>{{FeedCreatorName}}</b>, just added a new comment to the thread you started about [{{POST_TITLE}}].</p> <br>If you have any questions or need help, just hit 'View Feed':<br>
+                            <a href='{{feedLink}}'>View Feed</a>
+                            <p> or reach out to our support team.<br>
+                            Thanks for being part of our community!<br><br>
+                            Cheers,<br></p>
+                            <p>Best regards,<br>Ask.Javra (Admin),<br>ask.javra@notifications</p>
+                        </div>
+                    </body>
+                    </html>";
+
         }
     }
 }

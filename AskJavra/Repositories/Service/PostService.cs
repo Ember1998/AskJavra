@@ -493,12 +493,13 @@ namespace AskJavra.Repositories.Service
                     if (entity != null)
                     {
                         userId = item.CreatedBy;
-
+                        var isSoln = item.IsSolution;
                         await DeleteUpvoteByThreadIdAsync(item.Id);
 
                         _postThreads.Remove(item);
                         await _context.SaveChangesAsync();
-
+                        if (isSoln)
+                            await RevokePoint(userId, ContributionPointTypes.Resolver);
                         await RevokePoint(userId, ContributionPointTypes.ThreadCreate);
 
                     }
