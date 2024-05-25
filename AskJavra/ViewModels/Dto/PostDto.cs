@@ -60,7 +60,7 @@ namespace AskJavra.ViewModels.Dto
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 10;
         public int[]? TagIds { get; set; }
-        public FeedStatus[]? Filters { get; set; }
+        public int[]? Filters { get; set; }
         public string? UserId { get; set; }
 
     }

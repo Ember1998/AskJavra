@@ -23,7 +23,7 @@ namespace AskJavra.Controllers
             _postTagService = postTagService;
         }
         [HttpGet("GetAll")]
-        public async Task<IActionResult> GetAll(FeedRequestDto request)
+        public async Task<IActionResult> GetAll([FromForm] FeedRequestDto request)
         {
             var result = await _postService.GetAllAsync(request);
             return Ok(result);
@@ -41,7 +41,7 @@ namespace AskJavra.Controllers
         }
 
         [HttpPost("Create")]
-        public async Task<IActionResult> Create(PostDto dto)
+        public async Task<IActionResult> Create([FromForm] PostDto dto)
         {
             if (ModelState.IsValid)
             {
@@ -69,7 +69,7 @@ namespace AskJavra.Controllers
         }
 
         [HttpPut("Update/{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] PostDto entity)
+        public async Task<IActionResult> Update(Guid id, [FromForm] PostDto entity)
         {
 
             if (id == Guid.Empty || !ModelState.IsValid)
