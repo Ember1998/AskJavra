@@ -20,7 +20,7 @@ namespace AskJavra.Controllers
         {
             _lmsRepo = lmsRepo;
             _httpClientFactory = httpClientFactory;
-            _config = config; 
+            _config = config;
 
         }
 

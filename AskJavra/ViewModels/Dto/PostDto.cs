@@ -9,19 +9,21 @@ namespace AskJavra.ViewModels.Dto
         [Required]
         public string Title { get; set; }
         public string? Description { get; set; }
-        public PostType PostType { get; set; }
-        public FeedStatus FeedStatus { get; set; }       
+        public int PostType { get; set; }
+        public int FeedStatus { get; set; }       
         public string CreatedBy { get; set; }
         public string UpdatedBy { get; set; }
         public bool IsAnonymous { get; set; }
         public int[] TagIds { get; set; }
+
+        public IFormFile? ScreenShot { get; set; }
         //public List<PostTagDto>? Tags { get; set; }
-        
+
         public PostDto(string title, string? description, PostType postType, int[] tags)
         {
             Title = title;
             Description = description;
-            PostType = postType;
+            PostType = Convert.ToInt32(postType);
             TagIds = tags;
         }
         public PostDto() {  }
@@ -46,6 +48,8 @@ namespace AskJavra.ViewModels.Dto
         public int TotalUpvoteCount { get; set; }
         public int TotalFeeds { get; set; } 
         public bool IsAnonymous { get; set; }
+        public byte[]? Screenshot { get; set; }
+
         public ApplicationUserViewDtocs CreatedByUser { get; set; }
     }
     public class  FeedRequestDto
@@ -56,7 +60,7 @@ namespace AskJavra.ViewModels.Dto
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 10;
         public int[]? TagIds { get; set; }
-        public FeedStatus[]? Filters { get; set; }
+        public int[]? Filters { get; set; }
         public string? UserId { get; set; }
 
     }

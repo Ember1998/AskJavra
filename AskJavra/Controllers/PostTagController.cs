@@ -10,7 +10,7 @@ namespace AskJavra.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class PostTagController : Controller
     {
         private readonly PostService _postService;

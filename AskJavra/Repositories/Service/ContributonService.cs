@@ -1,6 +1,7 @@
 ﻿using AskJavra.DataContext;
 using AskJavra.Models.Contribution;
 using AskJavra.Models.Post;
+using AskJavra.ViewModels.Dto;
 using Microsoft.EntityFrameworkCore;
 using static AskJavra.Constant.Constants;
 
@@ -11,6 +12,7 @@ namespace AskJavra.Repositories.Service
         private readonly ApplicationDBContext _dbContext;
         private readonly DbSet<ContributionPointType> _dbSetPointType;
         private readonly DbSet<ContributionPoint> _dbSetPoint;
+        private readonly DbSet<ContributionRank> _dbSetRank;
         public ContributonService(
             ApplicationDBContext dbContext
             )
@@ -18,6 +20,7 @@ namespace AskJavra.Repositories.Service
             _dbContext = dbContext;
             _dbSetPointType = _dbContext.Set<ContributionPointType>();
             _dbSetPoint = _dbContext.Set<ContributionPoint>();
+            _dbSetRank = _dbContext.Set<ContributionRank>();
         }
         public async Task<bool> SetPoint(string userId, string pointType)
         {
@@ -63,6 +66,28 @@ namespace AskJavra.Repositories.Service
             catch (Exception ex)
             {
                 return false;
+            }
+        }
+        public UserRankDetails GetUserTotalPoints(string userId)
+        {
+            try
+            {
+                var result = _dbSetPoint.Where(x => x.UserId == userId).Select(x => x.Point).ToArray();
+                int total_point = result.Sum();
+                //var resultttt = await _dbSetRank.Where(x => x.RankMinPoint <= total_point && x.RankMaxPoint >= total_point).Select(y => new UserRankDetails
+                //{
+                //    RankName = y.RankName,
+                //    TotalPoint = total_point
+                //}).FirstOrDefaultAsync();
+                return _dbSetRank.Where(x => x.RankMinPoint <= total_point && x.RankMaxPoint >= total_point).Select(y => new UserRankDetails
+                {
+                    RankName = y.RankName,
+                    TotalPoint = total_point
+                }).FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                return new UserRankDetails();
             }
         }
     }

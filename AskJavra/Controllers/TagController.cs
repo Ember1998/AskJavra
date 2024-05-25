@@ -8,7 +8,7 @@ namespace AskJavra.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    // [Authorize]
     public class TagController : Controller
     {
         private readonly TagService _tagService;
@@ -18,7 +18,7 @@ namespace AskJavra.Controllers
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
-        {           
+        {
             return Ok(await _tagService.GetAllAsync());
         }
 
@@ -27,12 +27,12 @@ namespace AskJavra.Controllers
         {
             //var errorResponse = new ResponseDto<MyEntity>(false, "Entity not found", null);
             //return NotFound(errorResponse);
-            var result =await _tagService.GetByIdAsync(id);
+            var result = await _tagService.GetByIdAsync(id);
             if (result != null && result.Success)
                 return Ok(result);
             else if (result.Success == false && result.Message == "not found")
                 return NotFound(result);
-            else return StatusCode( 500,result);
+            else return StatusCode(500, result);
         }
 
         [HttpPost]
@@ -40,7 +40,7 @@ namespace AskJavra.Controllers
         {
             if (ModelState.IsValid)
             {
-                var result =  await _tagService.AddAsync(dto);
+                var result = await _tagService.AddAsync(dto);
 
                 // Ensure result.Data is not null before accessing Id
                 if (result.Data == null)
@@ -49,8 +49,9 @@ namespace AskJavra.Controllers
                 }
 
                 return CreatedAtAction(nameof(Create), new { id = result.Data.Id }, result);
-            }else
-             return BadRequest(ModelState);
+            }
+            else
+                return BadRequest(ModelState);
         }
 
         [HttpPut("{id}")]
@@ -62,9 +63,9 @@ namespace AskJavra.Controllers
                 return BadRequest(errorResponse);
             }
             var tag = new Tag(id, entity.Name, entity.TagDescription);
-            
+
             var response = await _tagService.UpdateAsync(tag);
-            
+
             if (response.Success == false && response.Message == "not found") return NotFound(response);
             else if (response.Data != null && response.Success) return Ok(response);
             else return StatusCode(500, response);
@@ -73,7 +74,7 @@ namespace AskJavra.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-             var result = await _tagService.DeleteAsync(id);
+            var result = await _tagService.DeleteAsync(id);
             if (result != null && result.Success)
                 return Ok(result);
             else if (result.Message == "not found")

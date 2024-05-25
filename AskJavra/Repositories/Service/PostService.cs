@@ -1,4 +1,6 @@
 ﻿using AskJavra.DataContext;
+using AskJavra.Enums;
+using AskJavra.Migrations;
 using AskJavra.Models.Contribution;
 using AskJavra.Models.Post;
 using AskJavra.ViewModels.Dto;
@@ -7,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using static AskJavra.Constant.Constants;
 
@@ -20,10 +23,12 @@ namespace AskJavra.Repositories.Service
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly DbSet<ContributionPointType> _dbSetPointType;
         private readonly DbSet<ContributionPoint> _dbSetPoint;
+        private readonly IConfiguration _configuration;
 
         public PostService(
             ApplicationDBContext context,
-            UserManager<ApplicationUser> userManager
+            UserManager<ApplicationUser> userManager,
+            IConfiguration configuration
             )
         {
             _context = context;
@@ -32,6 +37,7 @@ namespace AskJavra.Repositories.Service
             _voteSet = _context.Set<PostUpVote>();
             _dbSetPointType = _context.Set<ContributionPointType>();
             _dbSetPoint = _context.Set<ContributionPoint>();
+            _configuration = configuration;
         }
 
         public async Task<ResponseFeedDto> GetAllAsync(FeedRequestDto request)
@@ -43,14 +49,16 @@ namespace AskJavra.Repositories.Service
 
             if (request.SearchTerm != null && request.SearchTerm.Length > 0)
                 post = post.Where(x => x.Title.Contains(request.SearchTerm) || x.Description.Contains(request.SearchTerm));
-            
+
             if (request.Filters != null)
-                post = post.Where(x => x.FeedStatus.Equals(request.Filters));
+                post = post.Where(x => request.Filters.Any(y=> (int)x.FeedStatus == y));
+            //post = post.Where(x => x.FeedStatus.Equals(request.Filters));
             if (request.TagIds != null)
                 post = post.Where(x => x.Tags.Any(y => request.TagIds.Contains(y.TagId.Value)));
-            //post = post.Where(x => request.TagIds.Contains(x.Tags.Select(y => y.TagId)));
 
-            if (request.UserId.IsNullOrEmpty())
+            //post = post.Where(x => x.Tags.Any(s => request.TagIds.Contains(s.Id)));
+
+            if (!request.UserId.IsNullOrEmpty())
                 post = post.Where(x => x.CreatedBy == request.UserId);
 
             bool isSorted = false;
@@ -96,6 +104,7 @@ namespace AskJavra.Repositories.Service
                 PostTypeName = GetEnumDescription(x.PostType),
                 FeedStatusName = GetEnumDescription(x.FeedStatus),
                 IsAnonymous = x.IsAnonymous,
+               // Screenshot = x.ScreenshotPath != null ? System.IO.File.ReadAllBytes(x.ScreenshotPath):null,
                 CreatedByUser =x.CreatedBy != null? _context.Users.Where(z => z.Id == x.CreatedBy)
                 .Select(user => new ApplicationUserViewDtocs
                 {
@@ -124,8 +133,16 @@ namespace AskJavra.Repositories.Service
                     ThreadId = t.Id,
                     ThreadTitle = t.ThreadTitle,
                     ThreadUpVoteCount = t.ThreadUpVotes.Count,
-                    CreatedBy = t.CreatedBy,
-                    CreatedAt = t.CreatedAt,
+                    IsMarkedAsSoln = t.IsSolution,
+                    CreatedByUser = t.CreatedBy != null ? _context.Users.Where(z => z.Id == t.CreatedBy)
+                        .Select(user => new ApplicationUserViewDtocs
+                        {
+                            Id = user.Id,
+                            UserName = user.UserName,
+                            Email = user.Email,
+                            FullName = user.FullName
+
+                        }).FirstOrDefault() : new ApplicationUserViewDtocs(),
                     ThreadUpVotes = t.ThreadUpVotes.Select(upThread=>new ThreadUpvoteResponseDto
                     {
                          ThreadDescription = upThread.Thread.ThreadDescription,
@@ -139,7 +156,7 @@ namespace AskJavra.Repositories.Service
                     Id =y.Id,
                     PostId = y.PostId,
                     UserId = y.UserId,
-                    UserName = y.User.UserName
+                    //UserName = y.User.UserName
                 }).ToList(),
                 TotalUpvoteCount = x.UpVotes.Count
 
@@ -209,8 +226,16 @@ namespace AskJavra.Repositories.Service
                             ThreadDescription = t.ThreadDescription,
                             ThreadId = t.Id,
                             ThreadTitle = t.ThreadTitle,
-                            CreatedAt = t.CreatedAt,
-                            CreatedBy = t.CreatedBy,
+                            IsMarkedAsSoln = t.IsSolution,
+                            CreatedByUser = t.CreatedBy != null ? _context.Users.Where(z => z.Id == t.CreatedBy)
+                                        .Select(user => new ApplicationUserViewDtocs
+                                        {
+                                            Id = user.Id,
+                                            UserName = user.UserName,
+                                            Email = user.Email,
+                                            FullName = user.FullName
+
+                                        }).FirstOrDefault() : new ApplicationUserViewDtocs(),
                             ThreadUpVotes = t.ThreadUpVotes.Select(upThread => new ThreadUpvoteResponseDto
                             {
                                 ThreadDescription = upThread.Thread.ThreadDescription,
@@ -223,12 +248,14 @@ namespace AskJavra.Repositories.Service
                             Id = y.Id,
                             PostId = y.PostId,
                             UserId = y.UserId,
-                            UserName = y.User.UserName
+                            //UserName = y.User.UserName
                         }).ToList(),
                         TotalUpvoteCount = post.UpVotes.Count
 
                     };
-
+                    if (post.ScreenshotPath != null) {
+                        result.Screenshot = await System.IO.File.ReadAllBytesAsync(post.ScreenshotPath);
+}
                     return new ResponseDto<PostViewDto>(true, "Success", result);
 
                 }
@@ -240,20 +267,28 @@ namespace AskJavra.Repositories.Service
                 return new ResponseDto<PostViewDto>(false, ex.Message, new PostViewDto());
             }
         }
-
-        public async  Task<ResponseDto<PostViewDto>> AddAsync(PostDto entity)
+        public async Task<Post> GetPostById(Guid id)
+        {
+            return await _dbSet.FindAsync(id);
+        }
+        public async  Task<ResponseDto<PostViewDto>> AddAsync(PostDto entity, IFormFile file)
         {
             try
             {
-                if (!IsValidEnumValue(entity.FeedStatus))
+                if (!IsValidEnumValue((FeedStatus)entity.FeedStatus))
                     return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
-                if (!IsValidEnumValue(entity.PostType))
+                if (!IsValidEnumValue((PostType)entity.PostType))
                     return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
-                var post = new Post(entity.Title, entity.Description, entity.PostType, entity.FeedStatus, new List<PostThread>(), new List<PostTag>(), entity.CreatedBy, entity.IsAnonymous);
-                
+                var post = new Post(entity.Title, entity.Description, (PostType)entity.PostType, (FeedStatus)entity.FeedStatus, new List<PostThread>(), new List<PostTag>(), entity.CreatedBy, entity.IsAnonymous);
+                string imagePath = string.Empty;
+                if (file != null)
+                  imagePath = await UploadFile(file);
+                if(!imagePath.IsNullOrEmpty())
+                    post.ScreenshotPath = imagePath;
                 await _dbSet.AddAsync(post);
-                //await _context.SaveChangesAsync();
 
+                await _context.SaveChangesAsync();
+               
                 var result = new PostViewDto
                 {
                     Title = post.Title,
@@ -290,8 +325,15 @@ namespace AskJavra.Repositories.Service
                         ThreadDescription = t.ThreadDescription,
                         ThreadId = t.Id,
                         ThreadTitle = t.ThreadTitle,
-                        CreatedBy = t.CreatedBy,
-                        CreatedAt = t.CreatedAt
+                        CreatedByUser = t.CreatedBy != null ? _context.Users.Where(z => z.Id == t.CreatedBy)
+                        .Select(user => new ApplicationUserViewDtocs
+                        {
+                            Id = user.Id,
+                            UserName = user.UserName,
+                            Email = user.Email,
+                            FullName = user.FullName
+
+                        }).FirstOrDefault() : new ApplicationUserViewDtocs(),
 
                     }).ToList(),
                       UpVotes = post.UpVotes.Select(y => new UpvoteCountViewMode
@@ -299,7 +341,7 @@ namespace AskJavra.Repositories.Service
                           Id = y.Id,
                           PostId = y.PostId,
                           UserId = y.UserId,
-                          UserName = y.User.UserName
+                         // UserName = y.User.UserName
                       }).ToList(),
                     TotalUpvoteCount = post.UpVotes.Count
 
@@ -312,32 +354,69 @@ namespace AskJavra.Repositories.Service
                 return new ResponseDto<PostViewDto>(false, ex.Message, new PostViewDto());
             }
         }
-        public static bool IsValidEnumValue<TEnum>(TEnum value) where TEnum : struct, Enum
-        {
-            return Enum.IsDefined(typeof(TEnum), value);
-        }
-        public async Task<ResponseDto<PostViewDto>> UpdateAsync(Post post)
+        private async Task<string> UploadFile(IFormFile file)
         {
             try
             {
-                if (!IsValidEnumValue(post.FeedStatus))
-                    return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
+                var uploadPath = _configuration.GetValue<string>("ImageUploadPath");
+                if (!string.IsNullOrEmpty(uploadPath))
+                    if (!Directory.Exists(uploadPath))
+                    {
+                        Directory.CreateDirectory(uploadPath);
+                    }
+                if (file == null || file.Length == 0)
+                {
+                    return string.Empty;
+                }
+
+                var relativePath = Path.Combine(uploadPath, file.FileName);
+
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+                return relativePath;
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+            //}
+            public static bool IsValidEnumValue<TEnum>(TEnum value) where TEnum : struct, Enum
+        {
+            return Enum.IsDefined(typeof(TEnum), value);
+        }
+        public async Task<ResponseDto<PostViewDto>> UpdateAsync(Post post,IFormFile file)
+        {
+            try
+            {
+                var posted = await _dbSet.FindAsync(post.Id);
                 if (!IsValidEnumValue(post.PostType))
                     return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
                 post.LastModifiedAt = DateTime.UtcNow;
 
-                if(await _dbSet.FindAsync(post.Id) == null)
+                if(posted == null)
                     return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
+                posted.Title = post.Title;
+                posted.Description = post.Description;
+                posted.PostType = post.PostType;
+                string imagePath = string.Empty;
+                if (file != null)
+                    imagePath = await UploadFile(file);
 
-                _dbSet.Attach(post);
-                _context.Entry(post).State = EntityState.Modified;
+                _dbSet.Attach(posted);
+                _context.Entry(posted).State = EntityState.Modified;
                
                 await _context.SaveChangesAsync();
                 var result = new PostViewDto
                 {
-                    Title = post.Title,
-                    Description = post.Description,
-                    PostType = post.PostType,
+                    Title = posted.Title,
+                    Description = posted.Description,
+                    PostType = posted.PostType,
                     PostId = post.Id,
                     CreatedBy = post.CreatedBy,
                     CreationAt = post.CreatedAt,
