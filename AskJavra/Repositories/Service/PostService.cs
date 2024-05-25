@@ -1,4 +1,5 @@
 ﻿using AskJavra.DataContext;
+using AskJavra.Migrations;
 using AskJavra.Models.Contribution;
 using AskJavra.Models.Post;
 using AskJavra.ViewModels.Dto;
@@ -7,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using static AskJavra.Constant.Constants;
 
@@ -99,6 +101,7 @@ namespace AskJavra.Repositories.Service
                 PostTypeName = GetEnumDescription(x.PostType),
                 FeedStatusName = GetEnumDescription(x.FeedStatus),
                 IsAnonymous = x.IsAnonymous,
+                Screenshot = new FileStream(Path.GetFullPath(x.ScreenshotPath), FileMode.Open, FileAccess.Read),
                 CreatedByUser =x.CreatedBy != null? _context.Users.Where(z => z.Id == x.CreatedBy)
                 .Select(user => new ApplicationUserViewDtocs
                 {
@@ -149,7 +152,7 @@ namespace AskJavra.Repositories.Service
                     Id =y.Id,
                     PostId = y.PostId,
                     UserId = y.UserId,
-                    UserName = y.User.UserName
+                    //UserName = y.User.UserName
                 }).ToList(),
                 TotalUpvoteCount = x.UpVotes.Count
 
@@ -194,6 +197,7 @@ namespace AskJavra.Repositories.Service
                         FeedStatus = post.FeedStatus,
                         PostTypeName = GetEnumDescription(post.PostType),
                         FeedStatusName = GetEnumDescription(post.FeedStatus),
+                        Screenshot =  new FileStream(Path.GetFullPath(post.ScreenshotPath), FileMode.Open, FileAccess.Read),
                         CreatedByUser = _context.Users.Where(x=>x.Id == post.CreatedBy).Select(user => new ApplicationUserViewDtocs
                                 {
                                     Id = user.Id,
@@ -240,7 +244,7 @@ namespace AskJavra.Repositories.Service
                             Id = y.Id,
                             PostId = y.PostId,
                             UserId = y.UserId,
-                            UserName = y.User.UserName
+                            //UserName = y.User.UserName
                         }).ToList(),
                         TotalUpvoteCount = post.UpVotes.Count
 
@@ -328,7 +332,7 @@ namespace AskJavra.Repositories.Service
                           Id = y.Id,
                           PostId = y.PostId,
                           UserId = y.UserId,
-                          UserName = y.User.UserName
+                         // UserName = y.User.UserName
                       }).ToList(),
                     TotalUpvoteCount = post.UpVotes.Count
 
