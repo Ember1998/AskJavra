@@ -3,6 +3,7 @@ using AskJavra.Models.Contribution;
 using AskJavra.Models.Post;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using static AskJavra.Constant.Constants;
@@ -18,11 +19,12 @@ namespace AskJavra.Repositories.Service
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly DbSet<ContributionPointType> _dbSetPointType;
         private readonly DbSet<ContributionPoint> _dbSetPoint;
+        private readonly IEmailSender _emailSender;
 
 
         public PostThreadService(
             ApplicationDBContext context
-            , UserManager<ApplicationUser> userManager)
+            , UserManager<ApplicationUser> userManager, IEmailSender emailSender)
         {
             _context = context;
             _dbSet = _context.Set<PostThread>();
@@ -31,6 +33,7 @@ namespace AskJavra.Repositories.Service
             _userManager = userManager;
             _dbSetPointType = _context.Set<ContributionPointType>();
             _dbSetPoint = _context.Set<ContributionPoint>();
+            _emailSender = emailSender;
         }
 
         public async Task<List<PostThreadViewDto>> GetAllAsync()
@@ -112,6 +115,7 @@ namespace AskJavra.Repositories.Service
                         }).ToList(),
                     }
                 };
+                await ConfigureSyncEmail(await _userManager.FindByIdAsync(entity.CreatedBy),result);
                 return new ResponseDto<PostThreadViewDto>(true, "Record added successfully", result);
             }
             catch (Exception ex)
@@ -348,6 +352,14 @@ namespace AskJavra.Repositories.Service
             {
                 return false;
             }
+        }
+
+        private async Task ConfigureSyncEmail(ApplicationUser user, PostThreadViewDto dto)
+        {
+            var subject = "Notification";
+            var htmlMessage = $"<html>\r\n<head>\r\n<title>New Comment Notification</title>\r\n<style>\r\n        body {{\r\n            font-family: Arial, sans-serif;\r\n            line-height: 1.6;\r\n        }}\r\n        .container {{\r\n            width: 100%;\r\n            max-width: 600px;\r\n            margin: 0 auto;\r\n            padding: 20px;\r\n            border: 1px solid #ccc;\r\n            border-radius: 10px;\r\n            background-color: #f9f9f9;\r\n        }}\r\n        .header {{\r\n            font-size: 18px;\r\n            font-weight: bold;\r\n            margin-bottom: 10px;\r\n        }}\r\n        .content {{\r\n            font-size: 16px;\r\n            margin-bottom: 20px;\r\n        }}\r\n        .link {{\r\n            display: inline-block;\r\n            padding: 10px 20px;\r\n            font-size: 16px;\r\n            color: #fff;\r\n            background-color: #007bff;\r\n            text-decoration: none;\r\n            border-radius: 5px;\r\n        }}\r\n        .footer {{\r\n            font-size: 14px;\r\n            color: #555;\r\n            margin-top: 20px;\r\n        }}\r\n</style>\r\n</head>\r\n<body>\r\n<div class=\"container\">\r\n<div class=\"header\">Hey [User's Name], There's a New Comment on Your Thread!</div>\r\n<div class=\"content\">\r\n            Just a quick heads-up! Someone just added a new comment to the thread you started about [thread topic].\r\n</div>\r\n<div>\r\n<a href=\"[Link to the Thread]\" class=\"link\">Check it out here</a>\r\n</div>\r\n<div class=\"footer\">\r\n            If you have any questions or need help, just hit reply or reach out to our support team.<br>\r\n            Thanks for being part of our community!<br><br>\r\n            Cheers,<br>\r\n            [Your Name]<br>\r\n            [Your Position]<br>\r\n            [Your Contact Information]<br>\r\n            [Company/Website Name]\r\n</div>\r\n</div>\r\n</body>\r\n</html>";
+
+            await _emailSender.SendEmailAsync(user.Email, subject, htmlMessage);
         }
     }
 }
