@@ -225,6 +225,7 @@ namespace AskJavra.Repositories.Service
                             ThreadDescription = t.ThreadDescription,
                             ThreadId = t.Id,
                             ThreadTitle = t.ThreadTitle,
+                            IsMarkedAsSoln = t.IsSolution,
                             CreatedByUser = t.CreatedBy != null ? _context.Users.Where(z => z.Id == t.CreatedBy)
                                         .Select(user => new ApplicationUserViewDtocs
                                         {
