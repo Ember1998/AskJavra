@@ -1,13 +1,8 @@
 ﻿using AskJavra.Models.Post;
 using AskJavra.Models.Root;
-using AskJavra.Repositories.Interface;
 using AskJavra.Repositories.Service;
 using AskJavra.ViewModels.Dto;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using static AskJavra.Constant.Constants;
 
 namespace AskJavra.Controllers
 {
@@ -19,21 +14,21 @@ namespace AskJavra.Controllers
         private readonly PostService _postService;
         private readonly PostTagService _postTagService;
         public FeedController(
-            PostService postService, 
+            PostService postService,
             PostTagService postTagService
             )
         {
             _postService = postService;
             _postTagService = postTagService;
         }
-        [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] FeedRequestDto request)
+        [HttpGet("GetAll")]
+        public async Task<IActionResult> GetAll([FromBody] FeedRequestDto request)
         {
             var result = await _postService.GetAllAsync(request);
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("GetById/{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var result = await _postService.GetByIdAsync(id);
@@ -44,24 +39,24 @@ namespace AskJavra.Controllers
             else return BadRequest();
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromForm] PostDto dto)
+        [HttpPost("Create")]
+        public async Task<IActionResult> Create(PostDto dto)
         {
             if (ModelState.IsValid)
             {
                 var result = await _postService.AddAsync(dto, dto.ScreenShot);
 
-                // Ensure result.Data is not null before accessing Id
+                //Ensure result.Data is not null before accessing Id
                 if (result.Data == null)
                 {
-                    return StatusCode(500,new ResponseDto<Tag>(false, "Entity creation failed", new Tag()));
+                    return StatusCode(500, new ResponseDto<Tag>(false, "Entity creation failed", new Tag()));
                 }
-                if(result.Success && result.Data.PostId != Guid.Empty)
+                if (result.Success && result.Data.PostId != Guid.Empty)
                 {
                     var post = await _postService.GetByIdAsync(result.Data.PostId);
                     var postMod = new Post(post.Data.PostId, post.Data.Title, post.Data.Description, post.Data.PostType, post.Data.CreatedBy, post.Data.IsAnonymous);
-                    if(dto.TagIds != null && dto.TagIds.Length > 0 )                       
-                        await _postTagService.AddPostTagAsync(dto.TagIds, postMod);                   
+                    if (dto.TagIds != null && dto.TagIds.Length > 0)
+                        await _postTagService.AddPostTagAsync(dto.TagIds, postMod);
 
                     return Ok(result);
 
@@ -72,7 +67,7 @@ namespace AskJavra.Controllers
             return BadRequest(errorResponse);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("Update/{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] PostDto entity)
         {
 
@@ -86,12 +81,12 @@ namespace AskJavra.Controllers
             if (response.Success == false && response.Message == "not found") return NotFound(response);
             else if (response.Data != null && response.Success) return Ok(response);
             else return StatusCode(500, response);
-        }        
+        }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-           
+
             var result = await _postService.DeleteAsync(id);
             if (result != null && result.Success)
             {
@@ -109,7 +104,7 @@ namespace AskJavra.Controllers
             try
             {
                 var result = await _postService.UpvoteFeed(postId, upvoteBy);
-                
+
                 if (result.Success)
                 {
                     //if (result.Data.NeedPointRevoke)
@@ -121,7 +116,7 @@ namespace AskJavra.Controllers
                 else
                     return BadRequest(result);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
             }

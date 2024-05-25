@@ -10,7 +10,7 @@ namespace AskJavra.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-   // [Authorize]
+    // [Authorize]
     public class PostThreadController : Controller
     {
         private readonly PostThreadService _postThreadService;
@@ -49,7 +49,7 @@ namespace AskJavra.Controllers
                 {
                     return StatusCode(500, result); ;
                 }
-                if(result.Success == false)
+                if (result.Success == false)
                     return BadRequest(result);
                 return CreatedAtAction(nameof(Create), new { id = result.Data.PostId }, result);
             }
@@ -69,7 +69,7 @@ namespace AskJavra.Controllers
             postThread.CreatedBy = entity.CreatedBy;
 
             var response = await _postThreadService.UpdateAsync(postThread);
-           
+
             if (response.Success == false && response.Message == "not found") return NotFound(response);
             else if (response.Data != null && response.Success) return Ok(response);
             else return StatusCode(500, response);
@@ -109,10 +109,11 @@ namespace AskJavra.Controllers
             try
             {
                 var result = await _postThreadService.MarkThreadAsSolution(threadId, markedBy);
-                if(result.Success)
+                if (result.Success)
                     return Ok(result);
                 else return BadRequest(result);
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
             }
