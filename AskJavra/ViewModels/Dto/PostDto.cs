@@ -9,8 +9,8 @@ namespace AskJavra.ViewModels.Dto
         [Required]
         public string Title { get; set; }
         public string? Description { get; set; }
-        public PostType PostType { get; set; }
-        public FeedStatus FeedStatus { get; set; }       
+        public int PostType { get; set; }
+        public int FeedStatus { get; set; }       
         public string CreatedBy { get; set; }
         public string UpdatedBy { get; set; }
         public bool IsAnonymous { get; set; }
@@ -23,7 +23,7 @@ namespace AskJavra.ViewModels.Dto
         {
             Title = title;
             Description = description;
-            PostType = postType;
+            PostType = Convert.ToInt32(postType);
             TagIds = tags;
         }
         public PostDto() {  }
