@@ -59,6 +59,7 @@ namespace AskJavra.Repositories.Service
                 List<PostTag> postTags = new List<PostTag>();
                 foreach (var item in tags)
                     postTags.Add(new PostTag(item, post.Id, post));    
+                
                 await _dbSet.AddRangeAsync(postTags);
                 await _context.SaveChangesAsync();
 
