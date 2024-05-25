@@ -90,6 +90,23 @@ namespace AskJavra.Repositories.Service
                 throw new Exception(ex.Message);
             }
         }
+        public async Task<bool> DeletePostTagByPostIdOnly(Guid postId)
+        {
+            try
+            {
+                List<PostTag> tagsTec = new List<PostTag>();
+
+                    tagsTec.AddRange(_dbSet.Where(x => x.PostId == postId).ToList());
+
+                _dbSet.RemoveRange(tagsTec);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
         //public async Task<ResponseDto<List<PostTag>>> AddPostThreadTagAsync(List<ThreadTagDto> entity, PostThread thred)
         //{
         //    try
