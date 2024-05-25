@@ -104,6 +104,9 @@ namespace AskJavra.Controllers
         [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
+            await _postTagService.DeletePostTagByPostIdOnly(id);
+            await _postService.DeleteThreadByPostIdAsync(id);
+            await _postService.DeleteUpvoteByPostIdAsync(id);
 
             var result = await _postService.DeleteAsync(id);
             if (result != null && result.Success)

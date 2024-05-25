@@ -23,6 +23,9 @@ namespace AskJavra.Repositories.Service
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly DbSet<ContributionPointType> _dbSetPointType;
         private readonly DbSet<ContributionPoint> _dbSetPoint;
+        private readonly DbSet<PostThread> _postThreads;
+        private readonly DbSet<PostUpVote> _postUpVotes;
+        private readonly DbSet<ThreadUpVote> _threadUpVotes;
         private readonly IConfiguration _configuration;
 
         public PostService(
@@ -38,6 +41,9 @@ namespace AskJavra.Repositories.Service
             _dbSetPointType = _context.Set<ContributionPointType>();
             _dbSetPoint = _context.Set<ContributionPoint>();
             _configuration = configuration;
+            _postThreads = _context.Set<PostThread>();
+            _postUpVotes    = _context.Set<PostUpVote>();
+            _threadUpVotes = _context.Set<ThreadUpVote>();
         }
 
         public async Task<ResponseFeedDto> GetAllAsync(FeedRequestDto request)
@@ -469,6 +475,90 @@ namespace AskJavra.Repositories.Service
                 }
                 else
                     return new ResponseDto<string>(false, "not found", userId);
+            }
+            catch (Exception ex)
+            {
+                return new ResponseDto<string>(false, ex.Message, string.Empty);
+            }
+
+        }
+        public async Task<ResponseDto<string>> DeleteThreadByPostIdAsync(Guid id)
+        {
+            try
+            {
+                string userId = string.Empty;
+                var entity = await _postThreads.Where(x=>x.PostId == id).ToListAsync();
+                foreach(var item in entity)
+                {
+                    if (entity != null)
+                    {
+                        userId = item.CreatedBy;
+
+                        await DeleteUpvoteByThreadIdAsync(item.Id);
+
+                        _postThreads.Remove(item);
+                        await _context.SaveChangesAsync();
+
+                        await RevokePoint(userId, ContributionPointTypes.ThreadCreate);
+
+                    }
+                }
+                        return new ResponseDto<string>(true, "Record deleted successfully", userId);
+                
+            }
+            catch (Exception ex)
+            {
+                return new ResponseDto<string>(false, ex.Message, string.Empty);
+            }
+
+        }
+        public async Task<ResponseDto<string>> DeleteUpvoteByPostIdAsync(Guid id)
+        {
+            try
+            {
+                string userId = string.Empty;
+                var entity = await _postUpVotes.Where(x => x.PostId == id).ToListAsync();
+                foreach (var item in entity)
+                {
+                    if (entity != null)
+                    {
+                        userId = item.CreatedBy;
+                        _postUpVotes.Remove(item);
+                        await _context.SaveChangesAsync();
+
+                        await RevokePoint(userId, ContributionPointTypes.PostUpvote);
+
+                    }
+                }
+                return new ResponseDto<string>(true, "Record deleted successfully", userId);
+
+            }
+            catch (Exception ex)
+            {
+                return new ResponseDto<string>(false, ex.Message, string.Empty);
+            }
+
+        }
+        public async Task<ResponseDto<string>> DeleteUpvoteByThreadIdAsync(Guid id)
+        {
+            try
+            {
+                string userId = string.Empty;
+                var entity = await _threadUpVotes.Where(x => x.ThreadId == id).ToListAsync();
+                foreach (var item in entity)
+                {
+                    if (entity != null)
+                    {
+                        userId = item.UserId;
+                        _threadUpVotes.Remove(item);
+                        await _context.SaveChangesAsync();
+
+                        await RevokePoint(userId, ContributionPointTypes.ThreadUpvote);
+
+                    }
+                }
+                return new ResponseDto<string>(true, "Record deleted successfully", userId);
+
             }
             catch (Exception ex)
             {
