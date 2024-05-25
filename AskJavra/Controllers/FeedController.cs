@@ -4,6 +4,7 @@ using AskJavra.Models.Root;
 using AskJavra.Repositories.Service;
 using AskJavra.ViewModels.Dto;
 using Microsoft.AspNetCore.Mvc;
+using OpenAI_API.Moderation;
 
 namespace AskJavra.Controllers
 {
@@ -76,13 +77,19 @@ namespace AskJavra.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var post = new Post(id, entity.Title, entity.Description, (PostType)entity.PostType, entity.CreatedBy, entity.IsAnonymous);
+            //var post = new Post(id, entity.Title, entity.Description, (PostType)entity.PostType, entity.CreatedBy, entity.IsAnonymous);
+            var post = await _postService.GetPostById(id);
+
             post.LastModifiedBy = entity.UpdatedBy;
             var response = await _postService.UpdateAsync(post, entity.ScreenShot);
 
             if (response.Success == false && response.Message == "not found") return NotFound(response);
             else if (response.Data != null && response.Success)
             {
+                await _postTagService.deletePostTagByPostId(entity.TagIds, id);
+
+                if (entity.TagIds != null && entity.TagIds.Length > 0)
+                    await _postTagService.AddPostTagAsync(entity.TagIds, post);
                 return Ok(response);
             }
             else return StatusCode(500, response);
