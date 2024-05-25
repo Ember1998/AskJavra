@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 
 namespace AskJavra.Controllers
@@ -240,5 +241,57 @@ namespace AskJavra.Controllers
             var result = await userManager.DeleteAsync(user);
             return Ok(result.Succeeded);
         }
+
+        [AllowAnonymous]
+        [HttpPost("profile-change")]
+        public async Task<IActionResult> ProfileChange(ProfilePicDto fileviewModel)
+        {
+            if (!ModelState.IsValid||fileviewModel.file==null)
+            {
+                Response.StatusCode = 400;
+                return new JsonResult(new SerializableError(ModelState).ToList());
+            }
+            var user = await userManager.FindByIdAsync(fileviewModel.Id);
+            string imagePath = string.Empty;
+
+            if (fileviewModel.file != null)
+                imagePath = await UploadFile(fileviewModel.file);
+            user.ProfilePicPath = imagePath;
+            var result = await userManager.UpdateAsync(user);
+            return Ok(result.Succeeded);
+        }
+
+        private async Task<string> UploadFile(IFormFile file)
+        {
+            try
+            {
+                var uploadPath = "assets//ProfilePic";
+                if (!string.IsNullOrEmpty(uploadPath))
+                    if (!Directory.Exists(uploadPath))
+                    {
+                        Directory.CreateDirectory(uploadPath);
+                    }
+                if (file == null || file.Length == 0)
+                {
+                    return string.Empty;
+                }
+
+                var relativePath = Path.Combine(uploadPath, file.FileName);
+
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+                return relativePath;
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
     }
 }

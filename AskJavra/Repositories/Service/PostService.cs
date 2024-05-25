@@ -49,9 +49,10 @@ namespace AskJavra.Repositories.Service
 
             if (request.SearchTerm != null && request.SearchTerm.Length > 0)
                 post = post.Where(x => x.Title.Contains(request.SearchTerm) || x.Description.Contains(request.SearchTerm));
-            
+
             if (request.Filters != null)
-                post = post.Where(x => x.FeedStatus.Equals(request.Filters));
+                post = post.Where(x => request.Filters.Any(y=> (int)x.FeedStatus == y));
+                //post = post.Where(x => x.FeedStatus.Equals(request.Filters));
             if (request.TagIds != null)
                 post = post.Where(x => x.Tags.Any(y => request.TagIds.Contains(y.TagId.Value)));
             //post = post.Where(x => request.TagIds.Contains(x.Tags.Select(y => y.TagId)));
@@ -102,7 +103,7 @@ namespace AskJavra.Repositories.Service
                 PostTypeName = GetEnumDescription(x.PostType),
                 FeedStatusName = GetEnumDescription(x.FeedStatus),
                 IsAnonymous = x.IsAnonymous,
-                Screenshot = x.ScreenshotPath != null ? System.IO.File.ReadAllBytes(x.ScreenshotPath):null,
+               // Screenshot = x.ScreenshotPath != null ? System.IO.File.ReadAllBytes(x.ScreenshotPath):null,
                 CreatedByUser =x.CreatedBy != null? _context.Users.Where(z => z.Id == x.CreatedBy)
                 .Select(user => new ApplicationUserViewDtocs
                 {
