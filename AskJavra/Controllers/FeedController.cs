@@ -1,4 +1,5 @@
-﻿using AskJavra.Models.Post;
+﻿using AskJavra.Enums;
+using AskJavra.Models.Post;
 using AskJavra.Models.Root;
 using AskJavra.Repositories.Service;
 using AskJavra.ViewModels.Dto;
@@ -22,7 +23,7 @@ namespace AskJavra.Controllers
             _postTagService = postTagService;
         }
         [HttpGet("GetAll")]
-        public async Task<IActionResult> GetAll([FromBody] FeedRequestDto request)
+        public async Task<IActionResult> GetAll(FeedRequestDto request)
         {
             var result = await _postService.GetAllAsync(request);
             return Ok(result);
@@ -75,7 +76,7 @@ namespace AskJavra.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var post = new Post(id, entity.Title, entity.Description, entity.PostType, entity.CreatedBy, entity.IsAnonymous);
+            var post = new Post(id, entity.Title, entity.Description, (PostType)entity.PostType, entity.CreatedBy, entity.IsAnonymous);
             post.LastModifiedBy = entity.UpdatedBy;
             var response = await _postService.UpdateAsync(post, entity.ScreenShot);
             if (response.Success == false && response.Message == "not found") return NotFound(response);

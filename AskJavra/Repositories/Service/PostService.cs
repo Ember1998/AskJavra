@@ -1,4 +1,5 @@
 ﻿using AskJavra.DataContext;
+using AskJavra.Enums;
 using AskJavra.Migrations;
 using AskJavra.Models.Contribution;
 using AskJavra.Models.Post;
@@ -267,11 +268,11 @@ namespace AskJavra.Repositories.Service
         {
             try
             {
-                if (!IsValidEnumValue(entity.FeedStatus))
+                if (!IsValidEnumValue((FeedStatus)entity.FeedStatus))
                     return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
-                if (!IsValidEnumValue(entity.PostType))
+                if (!IsValidEnumValue((PostType)entity.PostType))
                     return new ResponseDto<PostViewDto>(false, "not found", new PostViewDto());
-                var post = new Post(entity.Title, entity.Description, entity.PostType, entity.FeedStatus, new List<PostThread>(), new List<PostTag>(), entity.CreatedBy, entity.IsAnonymous);
+                var post = new Post(entity.Title, entity.Description, (PostType)entity.PostType, (FeedStatus)entity.FeedStatus, new List<PostThread>(), new List<PostTag>(), entity.CreatedBy, entity.IsAnonymous);
                 string imagePath = string.Empty;
                 if (file != null)
                   imagePath = await UploadFile(file);
