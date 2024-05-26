@@ -107,7 +107,7 @@ namespace AskJavra.Repositories.Service
                 .FirstOrDefault();
 
                 var feedbasepath = _configuration.GetValue<string>("FEBaseUrl");
-                var path = feedbasepath + postThread.Id;
+                var path = feedbasepath + post.Id;
 
                 if (entity.CreatedBy != null)
                     await SetPoint(entity.CreatedBy, ContributionPointTypes.ThreadCreate);
