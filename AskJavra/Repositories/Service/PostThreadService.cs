@@ -420,52 +420,55 @@ namespace AskJavra.Repositories.Service
         {
             return @"
                     <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <style>
-                            .card {
-                                max-width: 600px;
-                                margin: auto;
-                                padding: 20px;
-                                border: 1px solid #dcdcdc;
-                                border-radius: 10px;
-                                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                                font-family: Arial, sans-serif;
-                                background-color: #f9f9f9;
-                            }
-                            .card h2 {
-                                color: #333;
-                            }
-                            .card p {
-                                color: #666;
-                                line-height: 1.6;
-                            }
-                            .card a {
-                                display: inline-block;
-                                margin-top: 20px;
-                                padding: 10px 20px;
-                                color: #fff;
-                                background-color: #007bff;
-                                text-decoration: none;
-                                border-radius: 5px;
-                            }
-                            .card a:hover {
-                                background-color: #0056b3;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class='card'>
-                            <h2>Hey {{createName}}, There's a New Comment on Your Feed!</h2>
-                            <p>Just a quick heads-up! <b>{{FeedCreatorName}}</b>, just added a new comment to the thread you started about [{{POST_TITLE}}].</p> <br>If you have any questions or need help, just hit 'View Feed':<br>
-                            <a href='{{feedLink}}'>View Feed</a>
-                            <p> or reach out to our support team.<br>
-                            Thanks for being part of our community!<br><br>
-                            Cheers,<br></p>
-                            <p>Best regards,<br>Ask.Javra (Admin),<br>ask.javra@notifications</p>
-                        </div>
-                    </body>
-                    </html>";
+<html>
+<head>
+    <style>
+        .card {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #dcdcdc;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+        }
+        .card h2 {
+            color: #333;
+        }
+        .card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .card a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            color: #fff;
+            background-color: #007bff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .card a:hover {
+            background-color: #0056b3;
+        }
+.btnView{
+	background-color:#00b96b !important;
+}
+    </style>
+</head>
+<body>
+    <div class='card'>
+        <h2>Hey {{createName}}, There's a New Comment on Your Feed!</h2>
+        <p>Just a quick heads-up! <b>{{FeedCreatorName}}</b>, just added a new comment to the thread you started about [{{POST_TITLE}}].</p> <br>If you have any questions or need help, just hit 'View Feed':<br>
+        <a href='{{feedLink}}' class='btnView'>View Feed</a>
+        <p> or reach out to our support team.<br>
+        Thanks for being part of our community!<br><br>
+        Cheers,<br></p>
+        <p>Best regards,<br>Ask.Javra (Admin),<br>javra.proponent@outlook.com</p>
+    </div>
+</body>
+</html>";
 
         }
     }
