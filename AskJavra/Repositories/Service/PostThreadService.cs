@@ -133,7 +133,7 @@ namespace AskJavra.Repositories.Service
                         }).ToList(),
                     }
                 };
-                await ConfigureSyncEmail(await _userManager.FindByIdAsync(entity.CreatedBy), result);
+                //await ConfigureSyncEmail(await _userManager.FindByIdAsync(entity.CreatedBy), result);
                 return new ResponseDto<PostThreadViewDto>(true, "Record added successfully", result);
             }
             catch (Exception ex)
